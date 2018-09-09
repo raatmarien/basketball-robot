@@ -56,7 +56,7 @@ class ComportMainboard(threading.Thread):
     def launch_motor(self, wheel_one, wheel_two, wheel_three, wheel_four=0):
         if self.connection_opened:
             self.write("sd:{}:{}:{}:{}\r\n".format(wheel_one, wheel_two,
-                                                wheel_three, wheel_four))
+                                                   wheel_three, wheel_four))
 
     def close(self):
         if self.connection is not None and self.connection.isOpen():  # close coil

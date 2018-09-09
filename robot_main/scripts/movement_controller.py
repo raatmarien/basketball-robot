@@ -21,33 +21,32 @@
 
 import rospy
 from std_msgs.msg import String
+from keyboard_publisher.msg import KeyEvent
 
-def movement_controller():
-    pub = rospy.Publisher("movement", String, queue_size=10)
+pub = rospy.Publisher("movement", String, queue_size=10)
+
+def key_event_callback(key_event):
+    command = key_event.char
+    translation_dict = { "w": "forward", "s": "backward", "a": "left",
+                         "d": "right", "g": "get_speeds", "r":
+                         "toggle_red_led" }
+    if command in translation_dict:
+        translated = translation_dict[command]
+        pub.publish(translated)
+    else:
+        rospy.loginfo("Unrecognised keypress")
+        
+    
+
+def key_listener():
     rospy.init_node("movement_controller")
-    rate = rospy.Rate(30)
+    sub = rospy.Subscriber("keyboard_publisher/key_event", KeyEvent, key_event_callback)
 
-    # Let's move the robot manually for now
-    while not rospy.is_shutdown():
-        command = raw_input()
-        if command == "w":
-            pub.publish("forward")
-        elif command == "s":
-            pub.publish("backward")
-        elif command == "a":
-            pub.publish("left")
-        elif command == "d":
-            pub.publish("right")
-        elif command == "g":
-            pub.publish("get_speeds")
-        elif command == "r":
-            pub.publish("toggle_red_led")
-
-        rate.sleep()
+    rospy.spin()
 
 
 if __name__ == "__main__":
     try:
-        movement_controller()
+        key_listener()
     except rospy.ROSInterruptException:
         pass
