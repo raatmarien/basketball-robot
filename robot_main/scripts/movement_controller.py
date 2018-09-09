@@ -38,6 +38,10 @@ def movement_controller():
             pub.publish("left")
         elif command == "d":
             pub.publish("right")
+        elif command == "g":
+            pub.publish("get_speeds")
+        elif command == "r":
+            pub.publish("toggle_red_led")
 
         rate.sleep()
 

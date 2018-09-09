@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="robot_main" type="movement_controller.py"
+        name="movement_controller" />
+  <include file="$(find robot_hardware)/launch/robot_hardware.launch" />
+</launch>

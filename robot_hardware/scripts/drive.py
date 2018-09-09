@@ -21,6 +21,7 @@
 import serial
 import rospy
 import math
+from robot_hardware.comport_mainboard import ComportMainboard
 from std_msgs.msg import String
 
 # Constants
@@ -29,10 +30,8 @@ WHEEL_ONE_ANGLE = 0
 WHEEL_TWO_ANGLE = 120
 WHEEL_THREE_ANGLE = 240
 
-# Basic setting for communication with our main board. The dsrdtr
-# setting enables hardware flow control.
-main_board = serial.Serial("COM3", baudrate=115200, timeout=0.8, dsrdtr=True)
-
+main_board = ComportMainboard()
+main_board.run()
 
 def get_relative_speed_for_wheel(wheel_angle, drive_angle):
     return math.cos(math.radians(drive_angle - wheel_angle))
@@ -45,14 +44,12 @@ def move_in_direction(degrees):
     wheel_two_speed = speed * get_relative_speed_for_wheel(WHEEL_TWO_ANGLE, degrees)
     wheel_three_speed = speed * get_relative_speed_for_wheel(WHEEL_THREE_ANGLE, degrees)
 
-    serial_message = ("sd:" + str(wheel_one_speed) + ":" + str(wheel_two_speed)
-                      + ":" + str(wheel_three_speed) + "\r\n")
-
-    main_board.write("f0\r\n".encode("utf-8"))
-    main_board.write(serial_message.encode("utf-8"))
+    main_board.launch_motor(wheel_one_speed, wheel_two_speed, wheel_three_speed)
 
 
 def movement_callback(command):
+    command = str(command)[7:][:-1]
+    rospy.loginfo("Recieved command: " + command)
     if command == "forward":
         move_in_direction(0)
     elif command == "backward":
@@ -61,6 +58,10 @@ def movement_callback(command):
         move_in_direction(270)
     elif command == "right":
         move_in_direction(90)
+    elif command == "get_speeds":
+        main_board.write_speeds()
+    elif command == "toggle_red_led":
+        main_board.toggle_red_led()
 
 
 def movement_listener():
