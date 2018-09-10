@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="robot_main" type="screen_requester.py"
+        name="screen_requester" />
+  <include file="$(find robot_hardware)/launch/camera_shower.launch" />
+</launch>

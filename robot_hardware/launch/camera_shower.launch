@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="robot_hardware" type="camera_shower.py" name="camera_shower"
+        output="screen" />
+</launch>
