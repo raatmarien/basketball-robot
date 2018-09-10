@@ -44,7 +44,7 @@ def move_in_direction(degrees):
     wheel_two_speed = speed * get_relative_speed_for_wheel(WHEEL_TWO_ANGLE, degrees)
     wheel_three_speed = speed * get_relative_speed_for_wheel(WHEEL_THREE_ANGLE, degrees)
 
-    main_board.launch_motor(wheel_one_speed, wheel_two_speed, wheel_three_speed)
+    main_board.set_wheels(wheel_one_speed, wheel_two_speed, wheel_three_speed)
 
 
 def movement_callback(command):
@@ -63,7 +63,7 @@ def movement_callback(command):
     elif command == "toggle_red_led":
         main_board.toggle_red_led()
     elif command == "stop":
-        main_board.launch_motor(0, 0, 0, 0)
+        main_board.set_wheels(0, 0, 0)
 
 
 def movement_listener():

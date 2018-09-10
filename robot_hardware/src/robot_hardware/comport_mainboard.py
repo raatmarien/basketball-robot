@@ -44,19 +44,27 @@ class ComportMainboard(threading.Thread):
             except:
                 print('mainboard: err write ' + comm)
 
+    def get_speeds(self):
+        self.write("gs\n")
+        return self.connection.readline()
+
     def write_speeds(self):
         if self.connection is not None and self.connection_opened:
-            self.write("gs\n")
-            rospy.loginfo("Speeds are: " + self.connection.readline())
+            rospy.loginfo("Speeds are: " + self.get_speeds())
 
     def toggle_red_led(self):
         if self.connection is not None and self.connection_opened:
             self.write("r\n")
 
-    def launch_motor(self, wheel_one, wheel_two, wheel_three, wheel_four=0):
+    def set_motors(self, motor_one, motor_two, motor_three, motor_four):
         if self.connection_opened:
-            self.write("sd:{}:{}:{}:{}\r\n".format(wheel_one, wheel_two,
-                                                wheel_three, wheel_four))
+            self.write("sd:{}:{}:{}:{}\r\n".format(motor_one, motor_two,
+                                                   motor_three, motor_four))
+
+    def set_wheels(self, wheel_one, wheel_two, wheel_three):
+        current_speeds = self.get_speeds()
+        motor_four_speed = current_speeds.split(":")[4]
+        self.set_motors(wheel_one, wheel_two, wheel_three, motor_four_speed)
 
     def close(self):
         if self.connection is not None and self.connection.isOpen():  # close coil
