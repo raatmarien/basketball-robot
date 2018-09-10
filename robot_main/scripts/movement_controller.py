@@ -30,18 +30,15 @@ def movement_controller():
     # Let's move the robot manually for now
     while not rospy.is_shutdown():
         command = raw_input()
-        if command == "w":
-            pub.publish("forward")
-        elif command == "s":
-            pub.publish("backward")
-        elif command == "a":
-            pub.publish("left")
-        elif command == "d":
-            pub.publish("right")
-        elif command == "g":
-            pub.publish("get_speeds")
-        elif command == "r":
-            pub.publish("toggle_red_led")
+
+        translation_dict = { "w": "forward", "s": "backward", "a":
+                             "left", "d": "right", "g": "get_speeds",
+                             "r": "toggle_red_led", "p": "stop" }
+
+        if command in translation_dict:
+            pub.publish(translation_dict[command])
+        else:
+            rospy.loginfo("Invalid command typed!")
 
         rate.sleep()
 

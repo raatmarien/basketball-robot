@@ -62,6 +62,8 @@ def movement_callback(command):
         main_board.write_speeds()
     elif command == "toggle_red_led":
         main_board.toggle_red_led()
+    elif command == "stop":
+        main_board.launch_motor(0, 0, 0, 0)
 
 
 def movement_listener():
