@@ -53,6 +53,17 @@ class ImageProcessor():
         color_image = np.asanyarray(color_frame.get_data())
 
         ball_mask = np.zeros((HEIGHT, WIDTH, 1), dtype=np.uint8)
+        ball_mask[color_image == ballcolor] = 255 # TODO: how would
+        # this actually work? Advance boolean array indexing with
+        # what? See
+        # https://docs.scipy.org/doc/numpy/reference/arrays.indexing.html#arrays-indexing
+
+        self.find_balls(ball_mask)
+
+    def find_balls(mask):
+        img, contour, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL,
+                                                   cv2.CHAIN_APPROX_SIMPLE)
+
 
 
 if __name__ == "__main__":
