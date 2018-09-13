@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="robot_image" type="image_processor.py"
+        name="image_processor" output="screen" />
+</launch>
