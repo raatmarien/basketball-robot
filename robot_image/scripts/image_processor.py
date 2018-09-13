@@ -28,9 +28,9 @@ import pyrealsense2 as rs
 # Constants: TODO put this in a conf file
 WIDTH = 640
 HEIGHT = 480
-FRAME_RATE = 60
+FRAME_RATE = 30
 
-MIN_CONTOUR_AREA = 30 # Should probably be more
+MIN_CONTOUR_AREA = 100 # Should probably be more
 DEBUG = True
 
 def debug_log(text):
@@ -53,9 +53,13 @@ class ImageProcessor():
         self.align = rs.align(align_to)
         self.pipeline.start(config)
 
-    def process_image(self):
-        debug_log("Processing a frame")
+    def ball_color_recognizer(self, h, s, v):
+        correct_hue = h > 60 and h < 100
+        correct_saturation = s > 70
+        correct_value = v > 25
+        return correct_hue and correct_saturation and correct_value
         
+    def process_image(self):
         frames = self.pipeline.wait_for_frames()
         aligned_frames = self.align.process(frames)
         depth_frame = aligned_frames.get_depth_frame()
@@ -63,19 +67,14 @@ class ImageProcessor():
 
         depth_image = np.asanyarray(depth_frame.get_data())
         color_image = np.asanyarray(color_frame.get_data())
-        yuv_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2YUV)
-
-        yuv_uint32 = yuv_image.astype('uint32')
-
-        debug_log("Frame retrieved and converted")
+        hsv_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2HSV)
 
         ball_mask = np.zeros((HEIGHT, WIDTH, 1), dtype=np.uint8)
-        ball_color_recognizer = lambda b, g, r: (g > 200) and (r < 200) and (b < 200)
 
         for y in range(0, HEIGHT):
             for x in range(0, WIDTH):
-                [b, g, r] = color_image[y, x]
-                ball_mask[y, x, 0] = 255 if ball_color_recognizer(b, g, r) else 0
+                [h, s, v] = hsv_image[y, x]
+                ball_mask[y, x, 0] = 255 if self.ball_color_recognizer(h, s, v) else 0
 
         self.find_balls(ball_mask)
 
