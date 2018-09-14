@@ -89,8 +89,9 @@ class ImageProcessor():
         for ball in self.balls_in_frame:
             self.object_publisher.publish(str(ball))
 
-            if DEBUG:
-                rospy.loginfo(str(ball))
+        if DEBUG:
+            rospy.loginfo(str(self.balls_in_frame))
+            self.print_mask(ball_mask)
 
     def find_balls(self, mask):
         img, contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL,
@@ -107,6 +108,21 @@ class ImageProcessor():
             rect = cv2.boundingRect(contour)
 
             self.balls_in_frame.append(rect)
+
+    def print_mask(self, mask):
+        coverage = [0]*64
+        for y in range(480):
+            for x in range(640):
+                c = mask[y, x]
+                if c > 128:
+                    coverage[x//10] += 1
+            
+            if y%20 is 19:
+                line = ""
+                for c in coverage:
+                    line += " .:nhBXWW"[c//25]
+                coverage = [0]*64
+                rospy.loginfo(line)
 
 
 if __name__ == "__main__":
