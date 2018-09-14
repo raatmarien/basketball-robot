@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="robot_image" type="ball_centerer.py"
+        name="ball_centerer" output="screen" />
+</launch>
