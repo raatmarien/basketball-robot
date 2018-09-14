@@ -46,8 +46,6 @@ def move_in_direction(degrees):
 
     main_board.set_wheels(wheel_one_speed, wheel_two_speed, wheel_three_speed)
 
-    # main_board.set_wheels(10, 10, 10)
-
 
 def movement_callback(command):
     command = str(command)[7:][:-1]
@@ -67,9 +65,9 @@ def movement_callback(command):
     elif command == "stop":
         main_board.set_wheels(0, 0, 0)
     elif command == "turn_left":
-        main_board.set_wheels(1, 1, 1)
+        main_board.set_wheels(-10, -10, -10)
     elif command == "turn_right":
-        main_board.set_wheels(-1, -1, -1) # Or the other way around?
+        main_board.set_wheels(10, 10, 10)
 
 
 def movement_listener():
