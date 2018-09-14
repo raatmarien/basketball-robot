@@ -40,7 +40,7 @@ class ComportMainboard(threading.Thread):
     def write(self, comm):
         if self.connection is not None:
             try:
-                self.connection.write(comm + '\n')
+                self.connection.write(comm)
             except:
                 print('mainboard: err write ' + comm)
 
@@ -62,8 +62,9 @@ class ComportMainboard(threading.Thread):
                                                    motor_three, motor_four))
 
     def set_wheels(self, wheel_one, wheel_two, wheel_three):
+        rospy.loginfo("Setting wheels to {} {} {}".format(wheel_one, wheel_two, wheel_three))
         current_speeds = self.get_speeds()
-        motor_four_speed = current_speeds.split(":")[4]
+        motor_four_speed = 0# TODO: fix current_speeds.split(":")[4]
         self.set_motors(wheel_one, wheel_two, wheel_three, motor_four_speed)
 
     def close(self):

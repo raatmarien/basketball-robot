@@ -30,52 +30,71 @@ WHEEL_ONE_ANGLE = 60
 WHEEL_TWO_ANGLE = 270
 WHEEL_THREE_ANGLE = 120
 
-main_board = ComportMainboard()
-main_board.run()
+class Driver:
+    def __init__(self):
+        self.main_board = ComportMainboard()
+        self.main_board.run()
 
-def get_relative_speed_for_wheel(wheel_angle, drive_angle):
-    return math.cos(math.radians(drive_angle - wheel_angle))
+        self.wheel_one_speed = 0
+        self.wheel_two_speed = 0
+        self.wheel_three_speed = 0
 
+    def get_relative_speed_for_wheel(self, wheel_angle, drive_angle):
+        return math.cos(math.radians(drive_angle - wheel_angle))
 
-def move_in_direction(degrees):
-    speed = 10
+    def move_in_direction(self, degrees):
+        speed = 10
 
-    wheel_one_speed = speed * get_relative_speed_for_wheel(WHEEL_ONE_ANGLE, degrees)
-    wheel_two_speed = speed * get_relative_speed_for_wheel(WHEEL_TWO_ANGLE, degrees)
-    wheel_three_speed = speed * get_relative_speed_for_wheel(WHEEL_THREE_ANGLE, degrees)
+        w1 = speed * self.get_relative_speed_for_wheel(WHEEL_ONE_ANGLE, degrees)
+        w2 = speed * self.get_relative_speed_for_wheel(WHEEL_TWO_ANGLE, degrees)
+        w3 = speed * self.get_relative_speed_for_wheel(WHEEL_THREE_ANGLE, degrees)
 
-    main_board.set_wheels(wheel_one_speed, wheel_two_speed, wheel_three_speed)
+        self.set_wheels(w1, w2, w3)
 
+    def set_wheels(self, w1, w2, w3):
+        rospy.loginfo("Changing wheels")
+        self.wheel_one_speed = w1
+        self.wheel_two_speed = w2
+        self.wheel_three_speed = w3
+        self.main_board.set_wheels(self.wheel_one_speed, self.wheel_two_speed, self.wheel_three_speed)
+    
 
-def movement_callback(command):
-    command = str(command)[7:][:-1]
-    rospy.loginfo("Recieved command: " + command)
-    if command == "forward":
-        move_in_direction(0)
-    elif command == "backward":
-        move_in_direction(180)
-    elif command == "left":
-        move_in_direction(270)
-    elif command == "right":
-        move_in_direction(90)
-    elif command == "get_speeds":
-        main_board.write_speeds()
-    elif command == "toggle_red_led":
-        main_board.toggle_red_led()
-    elif command == "stop":
-        main_board.set_wheels(0, 0, 0)
-    elif command == "turn_left":
-        main_board.set_wheels(-10, -10, -10)
-    elif command == "turn_right":
-        main_board.set_wheels(10, 10, 10)
+    def movement_callback(self, command):
+        command = str(command)[7:][:-1]
+        rospy.loginfo("Recieved command: " + command)
+        if command == "forward":
+            self.move_in_direction(0)
+        elif command == "backward":
+            self.move_in_direction(180)
+        elif command == "left":
+            self.move_in_direction(270)
+        elif command == "right":
+            self.move_in_direction(90)
+        elif command == "get_speeds":
+            self.main_board.write_speeds()
+        elif command == "toggle_red_led":
+            self.main_board.toggle_red_led()
+        elif command == "stop":
+            self.set_wheels(0, 0, 0)
+        elif command == "turn_left":
+            self.set_wheels(-10, -10, -10)
+        elif command == "turn_right":
+            self.set_wheels(10, 10, 10)
 
+    def movement_listener(self):
+        rospy.init_node("movement_listener")
+        rospy.Subscriber("movement", String, self.movement_callback)
+        rate = rospy.Rate(1)
 
-def movement_listener():
-    rospy.init_node("movement_listener")
-    rospy.Subscriber("movement", String, movement_callback)
+        while not rospy.is_shutdown():
+            self.main_board.set_wheels(self.wheel_one_speed, self.wheel_two_speed, self.wheel_three_speed)
 
-    rospy.spin()
+            rate.sleep()
 
 
 if __name__ == "__main__":
-    movement_listener()
+    try:
+        drive = Driver()
+        drive.movement_listener()
+    except rospy.ROSInterruptException:
+        pass
