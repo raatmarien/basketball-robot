@@ -33,6 +33,10 @@ FRAME_RATE = 30
 MIN_CONTOUR_AREA = 100 # Should probably be more
 DEBUG = True
 
+BALL_COLOR_LOWER_BOUND = (30, 70, 62)
+BALL_COLOR_UPPER_BOUND = (80, 255, 255)
+
+
 def debug_log(text):
     if DEBUG:
         rospy.loginfo(text)
@@ -54,9 +58,11 @@ class ImageProcessor():
         self.pipeline.start(config)
 
     def ball_color_recognizer(self, h, s, v):
-        correct_hue = h > 60 and h < 100
-        correct_saturation = s > 70
-        correct_value = v > 25
+        (lh, ls, lv) = BALL_COLOR_LOWER_BOUND
+        (hh, hs, hv) = BALL_COLOR_UPPER_BOUND
+        correct_hue = h >= lh and h <= hh
+        correct_saturation = s >= ls and s <= hs
+        correct_value = v >= lv and v <= hv
         return correct_hue and correct_saturation and correct_value
         
     def process_image(self):
