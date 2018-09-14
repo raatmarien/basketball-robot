@@ -38,7 +38,7 @@ def get_relative_speed_for_wheel(wheel_angle, drive_angle):
 
 
 def move_in_direction(degrees):
-    speed = 20
+    speed = 10
 
     wheel_one_speed = speed * get_relative_speed_for_wheel(WHEEL_ONE_ANGLE, degrees)
     wheel_two_speed = speed * get_relative_speed_for_wheel(WHEEL_TWO_ANGLE, degrees)
@@ -64,6 +64,10 @@ def movement_callback(command):
         main_board.toggle_red_led()
     elif command == "stop":
         main_board.set_wheels(0, 0, 0)
+    elif command == "turn_left":
+        main_board.set_wheels(1, 1, 1)
+    elif command == "turn_right":
+        main_board.set_wheels(-1, -1, -1) # Or the other way around?
 
 
 def movement_listener():

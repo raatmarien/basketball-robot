@@ -86,7 +86,16 @@ class ImageProcessor():
 
         debug_log(str(len(self.balls_in_frame)) + " balls found")
 
-        self.object_publisher.publish(str(self.balls_in_frame))
+        # Only send the horizontal location of the biggest ball for
+        # now
+        if len(self.balls_in_frame) > 0:
+            max_size = 0
+            max_ball = ()
+            for (x, y, width, height) in self.balls_in_frame:
+                if (width * height) > max_size:
+                    max_size = width * height
+                    max_ball = (x, y, width, height)
+            object_publisher.publish(str(((x + (width / 2)) / WIDTH) - 0.5))
 
         if DEBUG:
             rospy.loginfo(str(self.balls_in_frame))
