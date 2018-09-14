@@ -30,11 +30,11 @@ WIDTH = 640
 HEIGHT = 480
 FRAME_RATE = 30
 
-MIN_CONTOUR_AREA = 100 # Should probably be more
+MIN_CONTOUR_AREA = 200
 DEBUG = True
 
-BALL_COLOR_LOWER_BOUND = (30, 70, 62)
-BALL_COLOR_UPPER_BOUND = (80, 255, 255)
+BALL_COLOR_LOWER_BOUND = (70, 60, 100)
+BALL_COLOR_UPPER_BOUND = (100, 255, 255)
 
 
 def debug_log(text):
@@ -86,8 +86,7 @@ class ImageProcessor():
 
         debug_log(str(len(self.balls_in_frame)) + " balls found")
 
-        for ball in self.balls_in_frame:
-            self.object_publisher.publish(str(ball))
+        self.object_publisher.publish(str(self.balls_in_frame))
 
         if DEBUG:
             rospy.loginfo(str(self.balls_in_frame))
