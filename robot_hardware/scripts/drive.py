@@ -26,9 +26,9 @@ from std_msgs.msg import String
 
 # Constants
 # Wheel angles in degrees
-WHEEL_ONE_ANGLE = 0
-WHEEL_TWO_ANGLE = 120
-WHEEL_THREE_ANGLE = 240
+WHEEL_ONE_ANGLE = 60
+WHEEL_TWO_ANGLE = 270
+WHEEL_THREE_ANGLE = 120
 
 main_board = ComportMainboard()
 main_board.run()
@@ -45,6 +45,8 @@ def move_in_direction(degrees):
     wheel_three_speed = speed * get_relative_speed_for_wheel(WHEEL_THREE_ANGLE, degrees)
 
     main_board.set_wheels(wheel_one_speed, wheel_two_speed, wheel_three_speed)
+
+    # main_board.set_wheels(10, 10, 10)
 
 
 def movement_callback(command):
