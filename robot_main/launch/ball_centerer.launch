@@ -1,4 +1,5 @@
 <launch>
   <include file="$(find robot_hardware)/launch/robot_hardware.launch" />
   <include file="$(find robot_logic)/launch/ball_centerer.launch" />
+  <include file="$(find robot_image)/launch/robot_image.launch" />
 </launch>

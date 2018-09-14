@@ -95,7 +95,11 @@ class ImageProcessor():
                 if (width * height) > max_size:
                     max_size = width * height
                     max_ball = (x, y, width, height)
-            object_publisher.publish(str(((x + (width / 2)) / WIDTH) - 0.5))
+            (x, y, width, height) = max_ball
+            ball_pos = str(((x + (width / 2)) / WIDTH) - 0.5)
+            rospy.loginfo("Max ball " + str(max_ball))
+            rospy.loginfo("Ball at " + ball_pos)
+            self.object_publisher.publish(ball_pos)
 
         if DEBUG:
             rospy.loginfo(str(self.balls_in_frame))

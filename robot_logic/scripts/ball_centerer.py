@@ -29,6 +29,7 @@ movement_publisher = rospy.Publisher("movement", String, queue_size=10)
 
 def new_object_callback(position):
     pos = float(position)
+    rospy.loginfo("Ball at: " + position)
     if position > 0.1:
         movement_publisher.publish("turn_right")
     elif position < -0.1:
