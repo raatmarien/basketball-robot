@@ -49,7 +49,7 @@ class Driver:
         w2 = speed * self.get_relative_speed_for_wheel(WHEEL_TWO_ANGLE, degrees)
         w3 = speed * self.get_relative_speed_for_wheel(WHEEL_THREE_ANGLE, degrees)
 
-        self.set_wheels(w1, w2, w3)
+        self.set_wheels(round(w1, 2), round(w2, 2), round(w3, 2))
 
     def set_wheels(self, w1, w2, w3):
         rospy.loginfo("Changing wheels")
