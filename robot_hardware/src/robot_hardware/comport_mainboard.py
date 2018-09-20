@@ -63,9 +63,7 @@ class ComportMainboard(threading.Thread):
 
     def set_wheels(self, wheel_one, wheel_two, wheel_three):
         rospy.loginfo("Setting wheels to {} {} {}".format(wheel_one, wheel_two, wheel_three))
-        current_speeds = self.get_speeds()
-        motor_four_speed = 0# TODO: fix current_speeds.split(":")[4]
-        self.set_motors(wheel_one, wheel_two, wheel_three, motor_four_speed)
+        self.set_motors(wheel_one, wheel_two, wheel_three, 0)
 
     def close(self):
         if self.connection is not None and self.connection.isOpen():  # close coil

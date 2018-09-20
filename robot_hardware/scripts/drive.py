@@ -77,9 +77,9 @@ class Driver:
         elif command == "stop":
             self.set_wheels(0, 0, 0)
         elif command == "turn_left":
-            self.set_wheels(-10, -10, -10)
+            self.set_wheels(-1, -1, -1)
         elif command == "turn_right":
-            self.set_wheels(10, 10, 10)
+            self.set_wheels(1, 1, 1)
 
     def movement_listener(self):
         rospy.init_node("movement_listener")
@@ -90,6 +90,8 @@ class Driver:
             self.main_board.set_wheels(self.wheel_one_speed, self.wheel_two_speed, self.wheel_three_speed)
 
             rate.sleep()
+
+        self.main_board.close()
 
 
 if __name__ == "__main__":

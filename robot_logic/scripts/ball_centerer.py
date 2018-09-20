@@ -27,18 +27,35 @@ from std_msgs.msg import String
 
 movement_publisher = rospy.Publisher("movement", String, queue_size=10)
 
+turn_left = True
+
 def new_object_callback(position):
-    pos = float(position)
-    rospy.loginfo("Ball at: " + position)
-    if position > 0.1:
+    global turn_left
+    if position.data == "none":
+        # WAY TO HACKY
+        if turn_left:
+            pos = -1.5
+        else:
+            pos = 1.5
+    else:            
+        pos = float(position.data)
+    rospy.loginfo("Logic: Ball at: " + str(pos))
+    if pos > 0.1:
+        turn_left = False
+        rospy.loginfo("Sending turn_right")
         movement_publisher.publish("turn_right")
-    elif position < -0.1:
+    elif pos < -0.1:
+        turn_left = True
+        rospy.loginfo("Sending turn_left")
         movement_publisher.publish("turn_left")
     else:
         movement_publisher.publish("stop")
 
 if __name__ == "__main__":
     rospy.init_node("ball_centerer")
-    rospy.Subscriber("image_processing/object", String, new_object_callback)
+    rospy.Subscriber("image_processing/objects", String, new_object_callback)
 
+    rospy.loginfo("lets start turning left")
+    movement_publisher.publish("turn_left")
+    
     rospy.spin()

@@ -30,12 +30,11 @@ WIDTH = 640
 HEIGHT = 480
 FRAME_RATE = 30
 
-MIN_CONTOUR_AREA = 200
+MIN_CONTOUR_AREA = 10
 DEBUG = True
 
-BALL_COLOR_LOWER_BOUND = (70, 60, 100)
-BALL_COLOR_UPPER_BOUND = (100, 255, 255)
-
+BALL_COLOR_LOWER_BOUND = (60, 100, 40)
+BALL_COLOR_UPPER_BOUND = (90, 255, 255)
 
 def debug_log(text):
     if DEBUG:
@@ -66,6 +65,7 @@ class ImageProcessor():
         return correct_hue and correct_saturation and correct_value
         
     def process_image(self):
+        rospy.loginfo("Image: scanning frame")
         frames = self.pipeline.wait_for_frames()
         aligned_frames = self.align.process(frames)
         depth_frame = aligned_frames.get_depth_frame()
@@ -96,10 +96,13 @@ class ImageProcessor():
                     max_size = width * height
                     max_ball = (x, y, width, height)
             (x, y, width, height) = max_ball
-            ball_pos = str(((x + (width / 2)) / WIDTH) - 0.5)
+            rospy.loginfo("Ball: " + str(max_ball))
+            ball_pos = str(((x + (width / 2)) / float(WIDTH)) - 0.5)
             rospy.loginfo("Max ball " + str(max_ball))
-            rospy.loginfo("Ball at " + ball_pos)
+            debug_log("Ball at " + ball_pos)
             self.object_publisher.publish(ball_pos)
+        else:
+            self.object_publisher.publish("none")
 
         if DEBUG:
             rospy.loginfo(str(self.balls_in_frame))
