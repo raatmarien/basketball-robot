@@ -80,6 +80,8 @@ class Driver:
             self.set_wheels(-1, -1, -1)
         elif command == "turn_right":
             self.set_wheels(1, 1, 1)
+        elif command == "throw":
+            self.main_board.set_throw(2000)
 
     def movement_listener(self):
         rospy.init_node("movement_listener")
