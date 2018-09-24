@@ -29,6 +29,9 @@ from std_msgs.msg import String
 WHEEL_ONE_ANGLE = 60
 WHEEL_TWO_ANGLE = 270
 WHEEL_THREE_ANGLE = 120
+WHEEL_DISTANCE_FROM_CENTER = 0.133
+ROBOT_SPEED = 10
+ROBOT_TURN_SPEED = 1
 
 class Driver:
     def __init__(self):
@@ -39,15 +42,27 @@ class Driver:
         self.wheel_two_speed = 0
         self.wheel_three_speed = 0
 
-    def get_relative_speed_for_wheel(self, wheel_angle, drive_angle):
-        return math.cos(math.radians(drive_angle - wheel_angle))
+    def get_speed_for_wheel(self, wheel_angle, drive_angle,
+                            robot_speed, wheel_distance_from_center,
+                            robot_angular_velocity):
+        move_speed = robot_speed * math.cos(math.radians(drive_angle -
+                            wheel_angle))
+        turn_speed = wheel_distance_from_center * robot_angular_velocity
+        return move_speed + turn_speed
 
-    def move_in_direction(self, degrees):
-        speed = 10
-
-        w1 = speed * self.get_relative_speed_for_wheel(WHEEL_ONE_ANGLE, degrees)
-        w2 = speed * self.get_relative_speed_for_wheel(WHEEL_TWO_ANGLE, degrees)
-        w3 = speed * self.get_relative_speed_for_wheel(WHEEL_THREE_ANGLE, degrees)
+    def set_movement(self, linear_speed, direction_degrees, angular_speed):
+        w1 = self.get_speed_for_wheel(WHEEL_ONE_ANGLE, degrees,
+                                      linear_speed,
+                                      WHEEL_DISTANCE_FROM_CENTER,
+                                      angular_speed)
+        w2 = self.get_speed_for_wheel(WHEEL_TWO_ANGLE, degrees,
+                                      linear_speed,
+                                      WHEEL_DISTANCE_FROM_CENTER,
+                                      angular_speed)
+        w3 = self.get_speed_for_wheel(WHEEL_THREE_ANGLE, degrees,
+                                      linear_speed,
+                                      WHEEL_DISTANCE_FROM_CENTER,
+                                      angular_speed)
 
         self.set_wheels(round(w1, 2), round(w2, 2), round(w3, 2))
 
@@ -63,23 +78,23 @@ class Driver:
         command = str(command)[7:][:-1]
         rospy.loginfo("Recieved command: " + command)
         if command == "forward":
-            self.move_in_direction(0)
+            self.set_movement(ROBOT_SPEED, 0, 0)
         elif command == "backward":
-            self.move_in_direction(180)
+            self.set_movement(ROBOT_SPEED, 180, 0)
         elif command == "left":
-            self.move_in_direction(270)
+            self.set_movement(ROBOT_SPEED, 270, 0)
         elif command == "right":
-            self.move_in_direction(90)
+            self.set_movement(ROBOT_SPEED, 90, 0)
         elif command == "get_speeds":
             self.main_board.write_speeds()
         elif command == "toggle_red_led":
             self.main_board.toggle_red_led()
         elif command == "stop":
-            self.set_wheels(0, 0, 0)
+            self.set_movement(0, 0, 0)
         elif command == "turn_left":
-            self.set_wheels(-1, -1, -1)
+            self.set_movement(0, 0, -ROBOT_TURN_SPEED)
         elif command == "turn_right":
-            self.set_wheels(1, 1, 1)
+            self.set_movement(0, 0, ROBOT_TURN_SPEED)
         elif command == "throw":
             self.main_board.set_throw(2000)
 
