@@ -31,7 +31,7 @@ HEIGHT = 480
 FRAME_RATE = 30
 
 MIN_CONTOUR_AREA = 10
-DEBUG = True
+DEBUG = False
 
 BALL_COLOR_LOWER_BOUND = np.array([60, 100, 40])
 BALL_COLOR_UPPER_BOUND = np.array([90, 255, 255])
@@ -78,11 +78,12 @@ class ImageProcessor():
         if len(self.balls_in_frame) > 0:
             max_size = 0
             max_ball = ()
-            max_ball_distance = distance
+            max_ball_distance = 0
             for ((x, y, width, height), distance) in self.balls_in_frame:
                 if (width * height) > max_size:
                     max_size = width * height
                     max_ball = (x, y, width, height)
+                    max_ball_distance = distance
             (x, y, width, height) = max_ball
             rospy.loginfo("Ball: " + str(max_ball))
             ball_pos = str(((x + (width / 2)) / float(WIDTH)) - 0.5)
@@ -110,7 +111,7 @@ class ImageProcessor():
 
             rect = cv2.boundingRect(contour)
 
-            distance = get_median_distance(contour, depth)
+            distance = self.get_median_distance(contour, depth)
 
             self.balls_in_frame.append((rect, distance))
 

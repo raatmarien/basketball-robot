@@ -51,15 +51,15 @@ class Driver:
         return move_speed + turn_speed
 
     def set_movement(self, linear_speed, direction_degrees, angular_speed):
-        w1 = self.get_speed_for_wheel(WHEEL_ONE_ANGLE, degrees,
+        w1 = self.get_speed_for_wheel(WHEEL_ONE_ANGLE, direction_degrees,
                                       linear_speed,
                                       WHEEL_DISTANCE_FROM_CENTER,
                                       angular_speed)
-        w2 = self.get_speed_for_wheel(WHEEL_TWO_ANGLE, degrees,
+        w2 = self.get_speed_for_wheel(WHEEL_TWO_ANGLE, direction_degrees,
                                       linear_speed,
                                       WHEEL_DISTANCE_FROM_CENTER,
                                       angular_speed)
-        w3 = self.get_speed_for_wheel(WHEEL_THREE_ANGLE, degrees,
+        w3 = self.get_speed_for_wheel(WHEEL_THREE_ANGLE, direction_degrees,
                                       linear_speed,
                                       WHEEL_DISTANCE_FROM_CENTER,
                                       angular_speed)
