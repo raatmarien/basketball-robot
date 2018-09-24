@@ -63,7 +63,7 @@ class ImageProcessor():
         correct_saturation = s >= ls and s <= hs
         correct_value = v >= lv and v <= hv
         return correct_hue and correct_saturation and correct_value
-        
+
     def process_image(self):
         rospy.loginfo("Image: scanning frame")
         frames = self.pipeline.wait_for_frames()
@@ -77,12 +77,13 @@ class ImageProcessor():
 
         ball_mask = np.zeros((HEIGHT, WIDTH, 1), dtype=np.uint8)
 
+        # TODO: use cv2.withinrange or something see doc
         for y in range(0, HEIGHT):
             for x in range(0, WIDTH):
                 [h, s, v] = hsv_image[y, x]
                 ball_mask[y, x, 0] = 255 if self.ball_color_recognizer(h, s, v) else 0
 
-        self.find_balls(ball_mask)
+        self.find_balls(ball_mask, depth_image)
 
         debug_log(str(len(self.balls_in_frame)) + " balls found")
 
@@ -91,7 +92,8 @@ class ImageProcessor():
         if len(self.balls_in_frame) > 0:
             max_size = 0
             max_ball = ()
-            for (x, y, width, height) in self.balls_in_frame:
+            max_ball_distance = distance
+            for ((x, y, width, height), distance) in self.balls_in_frame:
                 if (width * height) > max_size:
                     max_size = width * height
                     max_ball = (x, y, width, height)
@@ -100,15 +102,15 @@ class ImageProcessor():
             ball_pos = str(((x + (width / 2)) / float(WIDTH)) - 0.5)
             rospy.loginfo("Max ball " + str(max_ball))
             debug_log("Ball at " + ball_pos)
-            self.object_publisher.publish(ball_pos)
+            self.object_publisher.publish(ball_pos + ":" + str(max_ball_distance))
         else:
-            self.object_publisher.publish("none")
+            self.object_publisher.publish("None")
 
         if DEBUG:
             rospy.loginfo(str(self.balls_in_frame))
             self.print_mask(ball_mask)
 
-    def find_balls(self, mask):
+    def find_balls(self, mask, depth):
         img, contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL,
                                                    cv2.CHAIN_APPROX_SIMPLE)
 
@@ -122,7 +124,23 @@ class ImageProcessor():
 
             rect = cv2.boundingRect(contour)
 
-            self.balls_in_frame.append(rect)
+            distance = get_median_distance(contour, depth)
+
+            self.balls_in_frame.append((rect, distance))
+
+    def get_median_distance(self, contour, depth):
+        cimg = np.zeros_like(depth)
+        cv2.drawContours(cimg, [contour], -1, color=255, thickness=-1)
+
+        # Access the image pixels and create a 1D numpy array then add to list
+        pts = np.where(cimg == 255)
+        distances = []
+        distances.append(depth[pts[0], pts[1]])
+        
+        distances.sort()
+
+        return distances[len(distances) / 2] # Okay, so not
+        # technically exactly the median, but close enough
 
     def print_mask(self, mask):
         coverage = [0]*64
@@ -131,7 +149,7 @@ class ImageProcessor():
                 c = mask[y, x]
                 if c > 128:
                     coverage[x//10] += 1
-            
+
             if y%20 is 19:
                 line = ""
                 for c in coverage:

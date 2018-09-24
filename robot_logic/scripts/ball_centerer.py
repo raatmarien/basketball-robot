@@ -31,14 +31,16 @@ turn_left = True
 
 def new_object_callback(position):
     global turn_left
-    if position.data == "none":
+    if position.data == "None":
         # WAY TO HACKY
         if turn_left:
             pos = -1.5
         else:
             pos = 1.5
+        distance = -1
     else:            
-        pos = float(position.data)
+        pos = float(position.data.split(":")[0])
+        distance = float(position.data.split(":")[0])
     rospy.loginfo("Logic: Ball at: " + str(pos))
     if pos > 0.1:
         turn_left = False
@@ -48,6 +50,9 @@ def new_object_callback(position):
         turn_left = True
         rospy.loginfo("Sending turn_left")
         movement_publisher.publish("turn_left")
+    elif distance > 1.0:
+        rospy.loginfo("Sending forward")
+        movement_publisher.publish("forward")
     else:
         movement_publisher.publish("stop")
 
