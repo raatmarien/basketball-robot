@@ -97,6 +97,12 @@ class Driver:
             self.set_movement(0, 0, ROBOT_TURN_SPEED)
         elif command == "throw":
             self.main_board.set_throw(2000)
+        elif command.split(":")[0] == "movement":
+            try:
+                splitted = command.split(":")
+                self.set_movement(splitted[1], splitted[2], splitted[3])
+            except:
+                rospy.loginfo("Incorrect movement command received and ignored")
 
     def movement_listener(self):
         rospy.init_node("movement_listener")
