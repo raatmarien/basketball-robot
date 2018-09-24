@@ -33,8 +33,8 @@ FRAME_RATE = 30
 MIN_CONTOUR_AREA = 10
 DEBUG = True
 
-BALL_COLOR_LOWER_BOUND = (60, 100, 40)
-BALL_COLOR_UPPER_BOUND = (90, 255, 255)
+BALL_COLOR_LOWER_BOUND = np.array([60, 100, 40])
+BALL_COLOR_UPPER_BOUND = np.array([90, 255, 255])
 
 def debug_log(text):
     if DEBUG:
@@ -56,14 +56,6 @@ class ImageProcessor():
         self.align = rs.align(align_to)
         self.pipeline.start(config)
 
-    def ball_color_recognizer(self, h, s, v):
-        (lh, ls, lv) = BALL_COLOR_LOWER_BOUND
-        (hh, hs, hv) = BALL_COLOR_UPPER_BOUND
-        correct_hue = h >= lh and h <= hh
-        correct_saturation = s >= ls and s <= hs
-        correct_value = v >= lv and v <= hv
-        return correct_hue and correct_saturation and correct_value
-
     def process_image(self):
         rospy.loginfo("Image: scanning frame")
         frames = self.pipeline.wait_for_frames()
@@ -75,13 +67,7 @@ class ImageProcessor():
         color_image = np.asanyarray(color_frame.get_data())
         hsv_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2HSV)
 
-        ball_mask = np.zeros((HEIGHT, WIDTH, 1), dtype=np.uint8)
-
-        # TODO: use cv2.withinrange or something see doc
-        for y in range(0, HEIGHT):
-            for x in range(0, WIDTH):
-                [h, s, v] = hsv_image[y, x]
-                ball_mask[y, x, 0] = 255 if self.ball_color_recognizer(h, s, v) else 0
+        ball_mask = cv2.inRange(hsv_image, BALL_COLOR_LOWER_BOUND, BALL_COLOR_UPPER_BOUND)
 
         self.find_balls(ball_mask, depth_image)
 
