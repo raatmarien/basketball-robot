@@ -33,8 +33,18 @@ FRAME_RATE = 30
 MIN_CONTOUR_AREA = 10
 DEBUG = False
 
+# Important reading about cv2 color spaces:
+# https://docs.opencv.org/3.4.2/df/d9d/tutorial_py_colorspaces.html
+# Hue goes from 0 to 179
 BALL_COLOR_LOWER_BOUND = np.array([60, 100, 40])
 BALL_COLOR_UPPER_BOUND = np.array([90, 255, 255])
+
+# These aren't actually calibrated yet
+BLUE_BASKET_LOWER_BOUND = np.array([90, 100, 40])
+BLUE_BASKET_UPPER_BOUND = np.array([125, 255, 255])
+
+MAGENTA_BASKET_LOWER_BOUND = np.array([125, 100, 40])
+MAGENTA_BASKET_UPPER_BOUND = np.array([170, 255, 255])
 
 def debug_log(text):
     if DEBUG:
@@ -68,30 +78,19 @@ class ImageProcessor():
         hsv_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2HSV)
 
         ball_mask = cv2.inRange(hsv_image, BALL_COLOR_LOWER_BOUND, BALL_COLOR_UPPER_BOUND)
-
         self.find_balls(ball_mask, depth_image)
 
-        debug_log(str(len(self.balls_in_frame)) + " balls found")
+        blue_basket_mask = cv2.inRange(hsv_image,
+                                       BLUE_BASKET_LOWER_BOUND,
+                                       BLUE_BASKET_UPPER_BOUND)
+        self.blue_basket = self.find_basket(blue_basket_mask)
 
-        # Only send the horizontal location of the biggest ball for
-        # now
-        if len(self.balls_in_frame) > 0:
-            max_size = 0
-            max_ball = ()
-            max_ball_distance = 0
-            for ((x, y, width, height), distance) in self.balls_in_frame:
-                if (width * height) > max_size:
-                    max_size = width * height
-                    max_ball = (x, y, width, height)
-                    max_ball_distance = distance
-            (x, y, width, height) = max_ball
-            rospy.loginfo("Ball: " + str(max_ball))
-            ball_pos = str(((x + (width / 2)) / float(WIDTH)) - 0.5)
-            rospy.loginfo("Max ball " + str(max_ball))
-            debug_log("Ball at " + ball_pos)
-            self.object_publisher.publish(ball_pos + ":" + str(max_ball_distance))
-        else:
-            self.object_publisher.publish("None")
+        magenta_basket_mask = cv2.inRange(hsv_image,
+                                          MAGENTA_BASKET_LOWER_BOUND,
+                                          MAGENTA_BASKET_UPPER_BOUND)
+        self.magenta_basket = self.find_basket(magenta_basket_mask)
+
+        self.send_objects()
 
         if DEBUG:
             rospy.loginfo(str(self.balls_in_frame))
@@ -128,6 +127,52 @@ class ImageProcessor():
 
         return distances[len(distances) / 2] # Okay, so not
         # technically exactly the median, but close enough
+
+    def find_basket(self, mask):
+        img, contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL,
+                                                   cv2.CHAIN_APPROX_SIMPLE)
+
+        basket = None
+        biggest_contour_size = MIN_CONTOUR_SIZE
+
+        for contour in contours:
+            contour_size = cv2.contourArea(contour)
+
+            if contour_size > biggest_contour_size:
+                biggest_contour_size = contour_size
+                basket = cv2.boundingRect(contour)
+
+        return basket
+
+    def get_largest_ball(self):
+        debug_log(str(len(self.balls_in_frame)) + " balls found")
+
+        # Only send the horizontal location of the biggest ball for
+        # now
+        if len(self.balls_in_frame) > 0:
+            max_size = 0
+            max_ball = ()
+            max_ball_distance = 0
+            for ((x, y, width, height), distance) in self.balls_in_frame:
+                if (width * height) > max_size:
+                    max_size = width * height
+                    max_ball = (x, y, width, height)
+                    max_ball_distance = distance
+            (x, y, width, height) = max_ball
+            rospy.loginfo("Ball: " + str(max_ball))
+            ball_pos = str(((x + (width / 2)) / float(WIDTH)) - 0.5)
+            rospy.loginfo("Max ball " + str(max_ball))
+            debug_log("Ball at " + ball_pos)
+            return ball_pos + ":" + str(max_ball_distance)
+        else:
+            return "None"
+
+    def send_objects(self):
+        ball = self.get_largest_ball()
+        baskets = "{}:{}".format(self.blue_basket, self.magenta_basket)
+        message = "{}\n{}".format(ball, baskets)
+        self.object_publisher.publish(message)
+
 
     def print_mask(self, mask):
         coverage = [0]*64

@@ -71,7 +71,7 @@ class BallCenteredDriver:
 
 
 def new_object_callback(message):
-    driver.react(message.data)
+    driver.react(message.data.split("\n")[0])
 
 
 if __name__ == "__main__":

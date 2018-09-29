@@ -33,9 +33,10 @@ movement_publisher = rospy.Publisher("movement", String, queue_size=10)
 
 turn_left = True
 
-def new_object_callback(position):
+def new_object_callback(message):
     global turn_left
-    if position.data == "None":
+    position = message.split("\n")[0]
+    if position == "None":
         # WAY TO HACKY
         if turn_left:
             pos = -1.5
@@ -43,8 +44,8 @@ def new_object_callback(position):
             pos = 1.5
         distance = -1
     else:            
-        pos = float(position.data.split(":")[0])
-        distance = float(position.data.split(":")[0])
+        pos = float(position.split(":")[0])
+        distance = float(position.split(":")[0])
     rospy.loginfo("Logic: Ball at: " + str(pos))
     if pos > 0.1:
         turn_left = False
