@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# ball_centered_driver.py -- Attempts to drive to the biggest ball in
+# ball_cornered_driver.py -- Attempts to drive to the biggest ball in
 # view
 
 # Copyright (C) 2018 Marien Raat <marienraat@riseup.net>
@@ -26,15 +26,15 @@ from robot_hardware.comport_mainboard import ComportMainboard
 from std_msgs.msg import String
 
 # Constants
-CENTER_REGION = 0.1
+CAMERA_FOV = 40 # See https://digilabor.ut.ee/index.php/Cube-O-Bot#Mechanics
 
-driver = BallCenteredDriver()
+driver = BallCorneredDriver()
 
 def log(text):
-    TAG = "robot_logic/ball_centered_driver"
+    TAG = "robot_logic/ball_cornered_driver"
     rospy.loginfo(TAG + ": " + text)
 
-class BallCenteredDriver:
+class BallCorneredDriver:
     def __init__(self):
         self.turn_left = True
         self.movement_publisher = rospy.Publisher("movement", String, queue_size=10)
@@ -48,11 +48,11 @@ class BallCenteredDriver:
         if position != "None":
             pos = float(position.split(":")[0])
             distance = float(position.split(":")[1])
-            # Is it in the center?
-            if pos > CENTER_REGION:
+            # Is it on the edge?
+            if pos < 0.4:
                 self.turn_left = False
                 self.send("turn_right")
-            elif pos < -CENTER_REGION:
+            elif pos > 0.5:
                 self.turn_left = True
                 self.send("turn_left")
             else:
@@ -60,13 +60,13 @@ class BallCenteredDriver:
                 if distance < 1.0:
                     self.send("stop")
                 else:
-                    self.send("forward")
+                    self.send("movement:10:{}:0".format(CAMERA_FOV))
         else:
-            log("We don't see a ball, so we turn till we do")
-            if self.turn_left:
-                self.send("turn_left")
-            else:
-                self.send("turn_right")
+            log("We don't see a ball, so we turn right till we do")
+            # Only turn right, since we try to put the ball at the
+            # right edge of the view, so it probably went out that
+            # way.
+            self.send("turn_right")
                 
 
 
@@ -75,7 +75,7 @@ def new_object_callback(message):
 
 
 if __name__ == "__main__":
-    rospy.init_node("ball_centered_driver")
+    rospy.init_node("ball_cornered")
     rospy.Subscriber("image_processing/objects", String, new_object_callback)
     
     rospy.spin()

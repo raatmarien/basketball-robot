@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="robot_logic" type="ball_cornered_driver.py"
+        name="ball_cornered_driver" output="screen" />
+</launch>
