@@ -28,8 +28,6 @@ from std_msgs.msg import String
 # Constants
 CENTER_REGION = 0.1
 
-driver = BallCenteredDriver()
-
 def log(text):
     TAG = "robot_logic/ball_centered_driver"
     rospy.loginfo(TAG + ": " + text)
@@ -44,6 +42,7 @@ class BallCenteredDriver:
         self.movement_publisher.publish(command)
 
     def react(self, position):
+        log(position)
         # Do we see a ball?
         if position != "None":
             pos = float(position.split(":")[0])
@@ -57,7 +56,7 @@ class BallCenteredDriver:
                 self.send("turn_left")
             else:
                 # Is it close?
-                if distance < 1.0:
+                if distance < 0.15:
                     self.send("stop")
                 else:
                     self.send("forward")
@@ -69,6 +68,7 @@ class BallCenteredDriver:
                 self.send("turn_right")
                 
 
+driver = BallCenteredDriver()
 
 def new_object_callback(message):
     driver.react(message.data.split("\n")[0])

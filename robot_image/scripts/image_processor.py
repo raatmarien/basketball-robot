@@ -64,7 +64,10 @@ class ImageProcessor():
         config.enable_stream(rs.stream.color, WIDTH, HEIGHT, rs.format.bgr8, FRAME_RATE)
         align_to = rs.stream.color
         self.align = rs.align(align_to)
-        self.pipeline.start(config)
+        self.profile = self.pipeline.start(config)
+
+        depth_sensor = self.profile.get_device().first_depth_sensor()
+        self.depth_scale = depth_sensor.get_depth_scale()
 
     def process_image(self):
         rospy.loginfo("Image: scanning frame")
@@ -110,11 +113,11 @@ class ImageProcessor():
 
             rect = cv2.boundingRect(contour)
 
-            distance = self.get_median_distance(contour, depth)
+            distance = self.get_corrected_mean_distance(contour, depth)
 
             self.balls_in_frame.append((rect, distance))
 
-    def get_median_distance(self, contour, depth):
+    def get_corrected_mean_distance(self, contour, depth):
         cimg = np.zeros_like(depth)
         cv2.drawContours(cimg, [contour], -1, color=255, thickness=-1)
 
@@ -123,17 +126,18 @@ class ImageProcessor():
         distances = []
         distances.append(depth[pts[0], pts[1]])
         
-        distances.sort()
+        distances = np.sort(distances)
 
-        return distances[len(distances) / 2] # Okay, so not
-        # technically exactly the median, but close enough
+        distance = np.mean(distances)
+
+        return distance * self.depth_scale
 
     def find_basket(self, mask):
         img, contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL,
                                                    cv2.CHAIN_APPROX_SIMPLE)
 
         basket = None
-        biggest_contour_size = MIN_CONTOUR_SIZE
+        biggest_contour_size = MIN_CONTOUR_AREA
 
         for contour in contours:
             contour_size = cv2.contourArea(contour)
@@ -163,6 +167,7 @@ class ImageProcessor():
             ball_pos = str(((x + (width / 2)) / float(WIDTH)) - 0.5)
             rospy.loginfo("Max ball " + str(max_ball))
             debug_log("Ball at " + ball_pos)
+            rospy.loginfo("Distance = " + str(distance))
             return ball_pos + ":" + str(max_ball_distance)
         else:
             return "None"
@@ -195,7 +200,7 @@ if __name__ == "__main__":
         rospy.init_node("image_processor")
         camera = ImageProcessor()
         camera.run()
-        rate = rospy.Rate(FRAME_RATE)
+        rate = rospy.Rate(10)
 
         while not rospy.is_shutdown():
             camera.process_image()

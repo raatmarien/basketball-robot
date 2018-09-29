@@ -26,12 +26,12 @@ from std_msgs.msg import String
 
 # Constants
 # Wheel angles in degrees
-WHEEL_ONE_ANGLE = 60
-WHEEL_TWO_ANGLE = 270
-WHEEL_THREE_ANGLE = 120
+WHEEL_ONE_ANGLE = 120
+WHEEL_TWO_ANGLE = 60
+WHEEL_THREE_ANGLE = 270
 WHEEL_DISTANCE_FROM_CENTER = 0.133
 ROBOT_SPEED = 10
-ROBOT_TURN_SPEED = 1
+ROBOT_TURN_SPEED = 50
 
 class Driver:
     def __init__(self):

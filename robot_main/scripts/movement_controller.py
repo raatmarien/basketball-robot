@@ -34,7 +34,8 @@ def movement_controller():
         translation_dict = { "w": "forward", "s": "backward", "a":
                              "left", "d": "right", "g": "get_speeds",
                              "r": "toggle_red_led", "p": "stop", "l":
-                             "turn_left", "t": "throw" }
+                             "turn_left", "t": "throw", "z":
+                             "turn_left", "x": "turn_right" }
 
         if command in translation_dict:
             pub.publish(translation_dict[command])

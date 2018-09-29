@@ -35,7 +35,7 @@ turn_left = True
 
 def new_object_callback(message):
     global turn_left
-    position = message.split("\n")[0]
+    position = message.data.split("\n")[0]
     if position == "None":
         # WAY TO HACKY
         if turn_left:
