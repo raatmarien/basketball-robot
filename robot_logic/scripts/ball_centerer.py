@@ -25,6 +25,10 @@ import math
 from robot_hardware.comport_mainboard import ComportMainboard
 from std_msgs.msg import String
 
+# NOTICE: To anyone reading and trying to understand. This node is for
+# a previous subtask and is not used anymore. However it is preserved
+# in the repository so that the subtask can be repeated for now.
+
 movement_publisher = rospy.Publisher("movement", String, queue_size=10)
 
 turn_left = True
@@ -50,9 +54,6 @@ def new_object_callback(position):
         turn_left = True
         rospy.loginfo("Sending turn_left")
         movement_publisher.publish("turn_left")
-    elif distance > 1.0:
-        rospy.loginfo("Sending forward")
-        movement_publisher.publish("forward")
     else:
         movement_publisher.publish("stop")
 
