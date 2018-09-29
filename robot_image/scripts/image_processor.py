@@ -26,8 +26,8 @@ import cv2
 import pyrealsense2 as rs
 
 # Constants: TODO put this in a conf file
-WIDTH = 640
-HEIGHT = 480
+WIDTH = 1280
+HEIGHT = 720
 FRAME_RATE = 30
 
 MIN_CONTOUR_AREA = 10
@@ -181,8 +181,8 @@ class ImageProcessor():
 
     def print_mask(self, mask):
         coverage = [0]*64
-        for y in range(480):
-            for x in range(640):
+        for y in range(1920):
+            for x in range(1080):
                 c = mask[y, x]
                 if c > 128:
                     coverage[x//10] += 1
@@ -200,7 +200,7 @@ if __name__ == "__main__":
         rospy.init_node("image_processor")
         camera = ImageProcessor()
         camera.run()
-        rate = rospy.Rate(10)
+        rate = rospy.Rate(5)
 
         while not rospy.is_shutdown():
             camera.process_image()

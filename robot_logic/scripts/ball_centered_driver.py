@@ -56,7 +56,7 @@ class BallCenteredDriver:
                 self.send("turn_left")
             else:
                 # Is it close?
-                if distance < 0.15:
+                if distance < 0.2:
                     self.send("stop")
                 else:
                     self.send("forward")
