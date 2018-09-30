@@ -28,7 +28,7 @@ import time
 
 # Constants
 CENTER_REGION = 0.1
-TIME_MOVING_FORWARD = 10
+TIME_MOVING_FORWARD = 20
 
 
 def log(text):
@@ -60,7 +60,7 @@ class BallCenteredDriver:
                 self.send("turn_left")
             else:
                 # Is it close?
-                if distance < 0.2:
+                if distance < 0.25:
                     self.send("stop")
                 else:
                     self.send("forward")
