@@ -24,9 +24,12 @@ import rospy
 import math
 from robot_hardware.comport_mainboard import ComportMainboard
 from std_msgs.msg import String
+import time
 
 # Constants
 CENTER_REGION = 0.1
+TIME_MOVING_FORWARD = 10
+
 
 def log(text):
     TAG = "robot_logic/ball_centered_driver"
@@ -36,6 +39,7 @@ class BallCenteredDriver:
     def __init__(self):
         self.turn_left = True
         self.movement_publisher = rospy.Publisher("movement", String, queue_size=10)
+        self.start_looking_time = time.time() + TIME_MOVING_FORWARD
 
     def send(self, command):
         log("Sending {}".format(command))
@@ -61,11 +65,15 @@ class BallCenteredDriver:
                 else:
                     self.send("forward")
         else:
-            log("We don't see a ball, so we turn till we do")
-            if self.turn_left:
-                self.send("turn_left")
+            if time.time() < self.start_looking_time:
+                log("We don't see the ball, so first we will move forward")
+                self.send("forward")
             else:
-                self.send("turn_right")
+                log("We don't see a ball, so we turn till we do")
+                if self.turn_left:
+                    self.send("turn_left")
+                else:
+                    self.send("turn_right")
                 
 
 driver = BallCenteredDriver()
