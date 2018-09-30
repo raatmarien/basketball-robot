@@ -100,7 +100,9 @@ class Driver:
         elif command.split(":")[0] == "movement":
             try:
                 splitted = command.split(":")
-                self.set_movement(splitted[1], splitted[2], splitted[3])
+                self.set_movement(float(splitted[1]),
+                                  float(splitted[2]),
+                                  float(splitted[3]))
             except:
                 rospy.loginfo("Incorrect movement command received and ignored")
 
