@@ -24,11 +24,11 @@ import rospy
 import math
 from robot_hardware.comport_mainboard import ComportMainboard
 from std_msgs.msg import String
+import time
 
 # Constants
-CAMERA_FOV = 40 # See https://digilabor.ut.ee/index.php/Cube-O-Bot#Mechanics
-
-driver = BallCorneredDriver()
+CAMERA_FOV = 29 # Trial and error (mostly error though)
+TIME_MOVING_FORWARD = 20
 
 def log(text):
     TAG = "robot_logic/ball_cornered_driver"
@@ -38,6 +38,7 @@ class BallCorneredDriver:
     def __init__(self):
         self.turn_left = True
         self.movement_publisher = rospy.Publisher("movement", String, queue_size=10)
+        self.start_looking_time = time.time() + TIME_MOVING_FORWARD
 
     def send(self, command):
         log("Sending {}".format(command))
@@ -48,27 +49,34 @@ class BallCorneredDriver:
         if position != "None":
             pos = float(position.split(":")[0])
             distance = float(position.split(":")[1])
+            log("Position is {}".format(pos))
             # Is it on the edge?
-            if pos < 0.4:
-                self.turn_left = False
-                self.send("turn_right")
-            elif pos > 0.5:
+            if pos < 0.35:
                 self.turn_left = True
                 self.send("turn_left")
+            elif pos > 0.5:
+                self.turn_left = False
+                self.send("turn_right")
             else:
                 # Is it close?
-                if distance < 1.0:
+                if distance < 0.18:
                     self.send("stop")
                 else:
-                    self.send("movement:10:{}:0".format(CAMERA_FOV))
+                    self.send("movement:20:{}:0".format(CAMERA_FOV *
+                                                        pos))
         else:
-            log("We don't see a ball, so we turn right till we do")
-            # Only turn right, since we try to put the ball at the
-            # right edge of the view, so it probably went out that
-            # way.
-            self.send("turn_right")
+            if time.time() < self.start_looking_time:
+                log("We don't see the ball, so first we will move forward")
+                self.send("forward")
+            else:
+                log("We don't see a ball, so we turn right till we do")
+                # Only turn right, since we try to put the ball at the
+                # right edge of the view, so it probably went out that
+                # way.
+                self.send("turn_right")
                 
 
+driver = BallCorneredDriver()
 
 def new_object_callback(message):
     driver.react(message.data.split("\n")[0])
