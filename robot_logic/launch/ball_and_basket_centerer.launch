@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="robot_logic" type="ball_and_basket_centerer.py"
+        name="ball_and_basket_centerer" output="screen" />
+</launch>

@@ -40,10 +40,10 @@ BALL_COLOR_LOWER_BOUND = np.array([60, 100, 40])
 BALL_COLOR_UPPER_BOUND = np.array([90, 255, 255])
 
 # These aren't actually calibrated yet
-BLUE_BASKET_LOWER_BOUND = np.array([90, 100, 40])
+BLUE_BASKET_LOWER_BOUND = np.array([90, 200, 100])
 BLUE_BASKET_UPPER_BOUND = np.array([125, 255, 255])
 
-MAGENTA_BASKET_LOWER_BOUND = np.array([125, 100, 40])
+MAGENTA_BASKET_LOWER_BOUND = np.array([125, 200, 100])
 MAGENTA_BASKET_UPPER_BOUND = np.array([170, 255, 255])
 
 def debug_log(text):
@@ -97,7 +97,7 @@ class ImageProcessor():
 
         if DEBUG:
             rospy.loginfo(str(self.balls_in_frame))
-            self.print_mask(ball_mask)
+            self.print_mask(blue_basket_mask)
 
     def find_balls(self, mask, depth):
         img, contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL,
@@ -146,7 +146,14 @@ class ImageProcessor():
                 biggest_contour_size = contour_size
                 basket = cv2.boundingRect(contour)
 
-        return basket
+        if basket is None:
+            return None
+
+        (sx, sy, sw, sh) = basket
+        wf = float(WIDTH)
+        hf = float(HEIGHT)
+        # In relative coordinates
+        return (sx / wf, sy / hf, sw / wf, sh / hf)
 
     def get_largest_ball(self):
         debug_log(str(len(self.balls_in_frame)) + " balls found")
@@ -181,8 +188,8 @@ class ImageProcessor():
 
     def print_mask(self, mask):
         coverage = [0]*64
-        for y in range(1920):
-            for x in range(1080):
+        for y in range(480):
+            for x in range(640):
                 c = mask[y, x]
                 if c > 128:
                     coverage[x//10] += 1
