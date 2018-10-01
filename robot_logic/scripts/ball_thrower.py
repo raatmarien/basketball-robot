@@ -45,13 +45,23 @@ class BallThrower:
         self.turn_left = True
         self.movement_publisher = rospy.Publisher("movement", String, queue_size=10)
         self.start_looking_time = time.time() + TIME_MOVING_FORWARD
+        self.throwing = False
 
     def send(self, command):
         log("Sending {}".format(command))
         self.movement_publisher.publish(command)
 
+    def throw(self):
+        self.send("forward")
+        self.send("throw:2000")
+        
     def react(self, position, baskets):
         log(position)
+
+        if self.throwing:
+            throw()
+            return
+        
         # Do we see a ball?
         if position != "None":
             pos = float(position.split(":")[0])
@@ -83,7 +93,7 @@ class BallThrower:
                         self.send("movement:2:90:-8")
                     else:
                         # Throw here
-                        self.send("stop")
+                        self.throw()
                 else:
                     self.send("forward")
         else:

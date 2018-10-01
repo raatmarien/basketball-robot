@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="robot_logic" type="ball_thrower.py"
+        name="ball_thrower" output="screen" />
+</launch>
