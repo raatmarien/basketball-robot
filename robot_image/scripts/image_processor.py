@@ -32,6 +32,7 @@ FRAME_RATE = 30
 
 MIN_CONTOUR_AREA = 10
 DEBUG = False
+HORIZONTAL_CAMERA = False
 
 # Important reading about cv2 color spaces:
 # https://docs.opencv.org/3.4.2/df/d9d/tutorial_py_colorspaces.html
@@ -149,7 +150,10 @@ class ImageProcessor():
         if basket is None:
             return None
 
-        (sx, sy, sw, sh) = basket
+        if HORIZONTAL_CAMERA:
+            (sx, sy, sw, sh) = basket
+        else:
+            (sy, sx, sh, sw) = basket
         wf = float(WIDTH)
         hf = float(HEIGHT)
         # In relative coordinates
@@ -171,7 +175,10 @@ class ImageProcessor():
                     max_ball_distance = distance
             (x, y, width, height) = max_ball
             rospy.loginfo("Ball: " + str(max_ball))
-            ball_pos = str(((x + (width / 2)) / float(WIDTH)) - 0.5)
+            if HORIZONTAL_CAMERA:
+                ball_pos = str(((x + (width / 2)) / float(WIDTH)) - 0.5)
+            else:
+                ball_pos = str(((y + (height / 2)) / float(HEIGHT)) - 0.5)
             rospy.loginfo("Max ball " + str(max_ball))
             debug_log("Ball at " + ball_pos)
             rospy.loginfo("Distance = " + str(distance))

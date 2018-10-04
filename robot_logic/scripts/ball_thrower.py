@@ -31,8 +31,8 @@ import time
 from ast import literal_eval
 
 # Constants
-CENTER_REGION = 0.02
-CENTER_BASKET_REGION = 0.02
+CENTER_REGION = 0.05
+CENTER_BASKET_REGION = 0.05
 TIME_MOVING_FORWARD = 10
 
 
