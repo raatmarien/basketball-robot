@@ -59,7 +59,8 @@ class BallThrower:
         log(position)
 
         if self.throwing:
-            throw()
+            log("Throwing")
+            self.throw()
             return
         
         # Do we see a ball?
@@ -94,6 +95,7 @@ class BallThrower:
                     else:
                         # Throw here
                         self.throw()
+                        self.throwing = True
                 else:
                     self.send("forward")
         else:
