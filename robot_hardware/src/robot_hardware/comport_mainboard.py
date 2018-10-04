@@ -41,6 +41,10 @@ class ComportMainboard(threading.Thread):
         if self.connection is not None:
             try:
                 self.connection.write(comm)
+                # So appearantly we need to clear the read buffer to
+                # the main board after writing, so we do that here
+                while self.connection.read() != '\n':
+                    pass
             except:
                 print('mainboard: err write ' + comm)
 
