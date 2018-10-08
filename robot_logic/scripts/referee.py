@@ -36,44 +36,52 @@ fieldID = 'A'
 robotID = 'B'
 
 
-class referee:
+class Referee:
     def __init__(self):
         #self.turn_left = True
-        self.movement_publisher = rospy.Publisher("movement", String, queue_size=10)
+        self.referee_publisher = rospy.Publisher("referee", String, queue_size=10)
         #self.start_looking_time = time.time() + TIME_MOVING_FORWARD
 
-	try:
-	    ser = serial.Serial(
-		'COM3',
-		baudrate=115200,
-		timeout = 1,
-		dsrdtr=True)
-	except:
-	    log("Failed to connect with Xbee")
+	self.ser = serial.Serial(
+	    'COM3',
+	    baudrate=115200,
+	    timeout = 1,
+	    dsrdtr=True)
 
     def send(self, command):
         log("Sending {}".format(command))
-        self.movement_publisher.publish(command)
+        self.referee_publisher.publish(command)
 
 
     def listen(self):
-    	answer = ser.read(12);
+        log("Listening for XBee")
+    	answer = self.ser.read(12);
+        log("Answer is {}".format(answer))
     	if answer == 'a' + fieldID + 'XSTART----' or answer == 'a' + fieldID + robotID + 'START----':
-            ser.write( 'a' + fieldID + robotID + 'ACK-----')
+            self.ser.write( 'a' + fieldID + robotID + 'ACK-----')
             log("Got order to start")
             movement = True
     	elif answer == 'a' + fieldID + 'XSTOP-----' or answer == 'a' + fieldID + robotID + 'STOP-----':
-            ser.write( 'a' + fieldID + robotID + 'ACK-----')
+            self.ser.write( 'a' + fieldID + robotID + 'ACK-----')
             log("Got order to stop")
             movement = False
 	    self.send("stop")
         elif answer ==  'a' + fieldID + robotID + 'PING-----':
             log("Got order to ping")
-            ser.write( 'a' + fieldID + robotID + 'ACK-----')
+            self.ser.write( 'a' + fieldID + robotID + 'ACK-----')
 
 
 if __name__ == "__main__":
     rospy.init_node("referee")
-    rospy.Subscriber("image_processing/objects", String, new_object_callback)
+    rate = rospy.Rate(10)
 
-    rospy.spin()
+    try:
+        referee = Referee()
+    except:
+	log("Failed to connect with Xbee")
+        exit()
+
+    while not rospy.is_shutdown():
+        referee.listen()
+        rate.sleep()
+
