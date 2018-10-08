@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="robot_logic" type="RF_commands.py"
+        name="RF_commands" output="screen" />
+</launch>
