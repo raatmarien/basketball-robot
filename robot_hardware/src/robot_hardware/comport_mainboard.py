@@ -41,6 +41,7 @@ class ComportMainboard(threading.Thread):
     def write(self, comm):
         if self.connection is not None:
             try:
+                return
                 self.connection.write(comm + "\r\n")
             except:
                 print('mainboard: err write ' + comm)
@@ -52,9 +53,6 @@ class ComportMainboard(threading.Thread):
             if t == "":
                 pass
             s += t + "\n"
-            print(t)
-            if len(t) > 1 && t[1] == 'r':
-                print("REFEREE COMMAND!!!" + t)
         return s
 
     def toggle_red_led(self):

@@ -116,15 +116,19 @@ class Driver:
     def movement_listener(self):
         rospy.init_node("movement_listener")
         rospy.Subscriber("movement", String, self.movement_callback)
+        self.mainboard_out = rospy.Publisher("mainboard", String, queue_size=10)
         rate = rospy.Rate(5)
 
         while not rospy.is_shutdown():
             self.main_board.set_wheels(self.wheel_one_speed, self.wheel_two_speed, self.wheel_three_speed)
             self.main_board.set_throw(self.throw_speed)
 
-            self.main_board.read()
+            messages = self.main_board.read()
+            for message in messages.split("\n"):
+                if message != "":
+                    rospy.loginfo("Sending hardware msg: " + message)
+                    self.mainboard_out.publish(message)
 
-            sleep(0.2)
             rate.sleep()
 
         self.main_board.close()

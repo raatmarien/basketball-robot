@@ -32,6 +32,8 @@ def mainboard_callback(message):
 if __name__ == "__main__":
     try:
         rospy.init_node("referee_listener")
-        rospy.Subscriber("hardware/mainboard_out", String, mainboard_callback)
+        rospy.Subscriber("mainboard", String, mainboard_callback)
+
+        rospy.spin()
     except rospy.ROSInterruptException:
         pass
