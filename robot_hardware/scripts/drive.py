@@ -23,6 +23,7 @@ import rospy
 import math
 from robot_hardware.comport_mainboard import ComportMainboard
 from std_msgs.msg import String
+from time import sleep
 
 # Constants
 # Wheel angles in degrees
@@ -121,6 +122,9 @@ class Driver:
             self.main_board.set_wheels(self.wheel_one_speed, self.wheel_two_speed, self.wheel_three_speed)
             self.main_board.set_throw(self.throw_speed)
 
+            self.main_board.read()
+
+            sleep(0.2)
             rate.sleep()
 
         self.main_board.close()

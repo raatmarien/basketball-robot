@@ -43,7 +43,7 @@ class Referee:
         #self.start_looking_time = time.time() + TIME_MOVING_FORWARD
 
 	self.ser = serial.Serial(
-	    'COM3',
+	    'COM5',
 	    baudrate=115200,
 	    timeout = 1,
 	    dsrdtr=True)
@@ -77,8 +77,9 @@ if __name__ == "__main__":
 
     try:
         referee = Referee()
-    except:
+    except Exception as e:
 	log("Failed to connect with Xbee")
+        log("Error {} while setting up the serial connection".format(e))
         exit()
 
     while not rospy.is_shutdown():

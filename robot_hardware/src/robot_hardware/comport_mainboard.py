@@ -7,6 +7,7 @@ import threading
 import time
 import subprocess
 import rospy
+from std_msgs.msg import String
 
 
 class ComportMainboard(threading.Thread):
@@ -40,34 +41,30 @@ class ComportMainboard(threading.Thread):
     def write(self, comm):
         if self.connection is not None:
             try:
-                self.connection.write(comm)
-                # So appearantly we need to clear the read buffer to
-                # the main board after writing, so we do that here
-                while self.connection.read() != '\n':
-                    pass
+                self.connection.write(comm + "\r\n")
             except:
                 print('mainboard: err write ' + comm)
 
-    def get_speeds(self):
-        self.write("gs\n")
-        return self.connection.readline()
-
-    def write_speeds(self):
-        if self.connection is not None and self.connection_opened:
-            rospy.loginfo("Speeds are: " + self.get_speeds())
+    def read(self):
+        s = ""
+        while self.connection.in_waiting:
+            t = self.connection.readline()
+            if t == "":
+                pass
+            s += t + "\n"
+            print(t)
+            if len(t) > 1 && t[1] == 'r':
+                print("REFEREE COMMAND!!!" + t)
+        return s
 
     def toggle_red_led(self):
         if self.connection is not None and self.connection_opened:
-            self.write("r\n")
-
-    def set_motors(self, motor_one, motor_two, motor_three, motor_four):
-        if self.connection_opened:
-            self.write("sd:{}:{}:{}:{}\r\n".format(motor_one, motor_two,
-                                                   motor_three, motor_four))
+            self.write("r")
 
     def set_wheels(self, wheel_one, wheel_two, wheel_three):
-        rospy.loginfo("Setting wheels to {} {} {}".format(wheel_one, wheel_two, wheel_three))
-        self.set_motors(wheel_one, wheel_two, wheel_three, 0)
+        if self.connection_opened:
+            rospy.loginfo("Setting wheels to {} {} {}".format(wheel_one, wheel_two, wheel_three))
+            self.write("sd:{}:{}:{}".format(wheel_one, wheel_two, wheel_three))
 
     def set_throw(self, speed):
         self.write("d:{}".format(speed))
