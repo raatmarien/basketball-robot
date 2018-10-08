@@ -30,40 +30,50 @@ def log(text):
     TAG = "robot_logic/ball_and_basket_centerer"
     rospy.loginfo(TAG + ": " + text)
 
-ser = serial.Serial('COM3',baudrate=115200,timeout = 1,dsrdtr=True)
+#ser = serial.Serial('COM3',baudrate=115200,timeout = 1,dsrdtr=True)
 
 fieldID = 'A'
 robotID = 'B'
 
 
-class RFcommands:
+class referee:
     def __init__(self):
         #self.turn_left = True
         self.movement_publisher = rospy.Publisher("movement", String, queue_size=10)
         #self.start_looking_time = time.time() + TIME_MOVING_FORWARD
+
+	try:
+	    ser = serial.Serial(
+		'COM3',
+		baudrate=115200,
+		timeout = 1,
+		dsrdtr=True)
+	except:
+	    log("Failed to connect with Xbee")
 
     def send(self, command):
         log("Sending {}".format(command))
         self.movement_publisher.publish(command)
 
 
-while True:
-    answer = ser.read(12);
-    if answer == 'a' + fieldID + 'XSTART----' or answer == 'a' + fieldID + robotID + 'START----':
-        ser.write( 'a' + fieldID + robotID + 'ACK-----')
-        log("Got order to start")
-        liikumine = True
-    elif answer == 'a' + fieldID + 'XSTOP-----' or answer == 'a' + fieldID + robotID + 'STOP-----':
-        ser.write( 'a' + fieldID + robotID + 'ACK-----')
-        log("Got order to stop")
-        liikumine = False
-    elif answer ==  'a' + fieldID + robotID + 'PING-----':
-        log("Got order to ping")
-        ser.write( 'a' + fieldID + robotID + 'ACK-----')
+    def listen(self):
+    	answer = ser.read(12);
+    	if answer == 'a' + fieldID + 'XSTART----' or answer == 'a' + fieldID + robotID + 'START----':
+            ser.write( 'a' + fieldID + robotID + 'ACK-----')
+            log("Got order to start")
+            movement = True
+    	elif answer == 'a' + fieldID + 'XSTOP-----' or answer == 'a' + fieldID + robotID + 'STOP-----':
+            ser.write( 'a' + fieldID + robotID + 'ACK-----')
+            log("Got order to stop")
+            movement = False
+	    self.send("stop")
+        elif answer ==  'a' + fieldID + robotID + 'PING-----':
+            log("Got order to ping")
+            ser.write( 'a' + fieldID + robotID + 'ACK-----')
 
 
 if __name__ == "__main__":
-    rospy.init_node("RF_commands")
+    rospy.init_node("referee")
     rospy.Subscriber("image_processing/objects", String, new_object_callback)
 
     rospy.spin()

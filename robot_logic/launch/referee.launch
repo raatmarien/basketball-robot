@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="robot_logic" type="referee.py"
+        name="referee" output="screen" />
+</launch>
