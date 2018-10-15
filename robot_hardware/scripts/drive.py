@@ -101,7 +101,8 @@ class Driver:
         elif command.split(":")[0] == "throw":
             try:
                 splitted = command.split(":")
-                self.throw_speed = 1500
+                self.throw_speed = splitted
+                self.main_board.set_throw(self.throw_speed)
             except:
                 rospy.loginfo("Incorrect throw command received and ignored")
         elif command.split(":")[0] == "movement":
@@ -121,7 +122,7 @@ class Driver:
 
         while not rospy.is_shutdown():
             self.main_board.set_wheels(self.wheel_one_speed, self.wheel_two_speed, self.wheel_three_speed)
-            self.main_board.set_throw(self.throw_speed)
+
 
             messages = self.main_board.read()
             for message in messages.split("\n"):

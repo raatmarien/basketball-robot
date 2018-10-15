@@ -16,6 +16,7 @@ class ComportMainboard(threading.Thread):
 
     def __init__(self):
         threading.Thread.__init__(self)
+        self.buffered = ""
 
     def open(self):
         try:
@@ -41,18 +42,19 @@ class ComportMainboard(threading.Thread):
     def write(self, comm):
         if self.connection is not None:
             try:
-                return
                 self.connection.write(comm + "\r\n")
+                self.buffered = self.read()
             except:
                 print('mainboard: err write ' + comm)
 
     def read(self):
-        s = ""
+        s = self.buffered
         while self.connection.in_waiting:
-            t = self.connection.readline()
+            t = self.connection.read()
             if t == "":
                 pass
-            s += t + "\n"
+            s += t
+        self.buffered = ""
         return s
 
     def toggle_red_led(self):
