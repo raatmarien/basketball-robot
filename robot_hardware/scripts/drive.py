@@ -113,6 +113,13 @@ class Driver:
                                   float(splitted[3]))
             except:
                 rospy.loginfo("Incorrect movement command received and ignored")
+        elif command.split(":")[0] == "ping":
+            try:
+                rospy.loginfo("Sending ping command")
+                splitted = command.split(":")
+                self.main_board.send_ping(splitted[1], splitted[2])
+            except:
+                rospy.loginfo("Incorrect ping command received and ignored")
 
     def movement_listener(self):
         rospy.init_node("movement_listener")

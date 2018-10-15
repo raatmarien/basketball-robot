@@ -22,12 +22,24 @@
 import rospy
 from std_msgs.msg import String
 
-pub = rospy.Publisher("referee", String, queue_size=10)
+pub = rospy.Publisher("movement", String, queue_size=10)
 
+robotID = "A"
+fieldID = "B"
 
 def mainboard_callback(message):
-    rospy.loginfo(message.data)
-
+    if len(message.data.split(":")) == 1:
+        return
+    without_ref = message.data.split(":")[1]
+    if len(without_ref) > 1:
+        command = without_ref[:-1]
+        if command == "a" + fieldID + "XSTART----" or command == "a" + fieldID + robotID + "START----":
+            pub.publish("forward")
+        elif command == "a" + fieldID + "XSTOP-----" or command == "a" + fieldID + robotID + "STOP-----":
+            pub.publish("stop")
+        elif command ==  'a' + fieldID + robotID + 'PING-----':
+            # TODO send ACK
+            pub.publish("ping:{}:{}".format(robotID, fieldID))
 
 if __name__ == "__main__":
     try:

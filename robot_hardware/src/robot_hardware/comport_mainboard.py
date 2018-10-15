@@ -69,6 +69,10 @@ class ComportMainboard(threading.Thread):
     def set_throw(self, speed):
         self.write("d:{}".format(speed))
 
+    def send_ping(self, robotID, fieldID):
+        ack_message = 'a' + fieldID + robotID + 'ACK-----'
+        self.write("rf:{}".format(ack_message))
+
     def close(self):
         if self.connection is not None and self.connection.isOpen():  # close coil
             try:
