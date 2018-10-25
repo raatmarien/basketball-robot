@@ -67,6 +67,7 @@ class ComportMainboard(threading.Thread):
             self.write("sd:{}:{}:{}".format(wheel_one, wheel_two, wheel_three))
 
     def set_throw(self, speed):
+        rospy.loginfo("Setting thrower to speed " + str(speed))
         self.write("d:{}".format(speed))
 
     def send_ping(self, robotID, fieldID):
