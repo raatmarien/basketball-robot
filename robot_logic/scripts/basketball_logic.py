@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+2#!/usr/bin/env python
 # basketball_logic.py -- This node should do the main logic of the
 # robot as described in the state diagram. It assumes we want to score in the
 # blue basket now.
@@ -31,15 +31,15 @@ from ast import literal_eval
 # Constants
 CENTER_REGION = 0.05
 CENTER_BASKET_REGION = 0.05
-TIME_MOVING_FORWARD = 10
+TIME_MOVING_FORWARD = 5
 TIME_THROWING = 3
 DISTANCE_TO_CENTER_BALL = 0.2
 CAMERA_FOV = 29.0 # Trial and error (mostly error though)
 
 
 class State:
-    FORWARD, TURNING, MOVING_AND_TURNING, \
-        CENTERING, THROWING = range(5)
+    STOPPED, FORWARD, TURNING, MOVING_AND_TURNING, \
+        CENTERING, THROWING = range(6)
 
 
 def log(text):
@@ -50,14 +50,16 @@ class BasketballLogic:
     def __init__(self):
         self.turn_left = True
         self.movement_publisher = rospy.Publisher("movement", String, queue_size=10)
-        self.move_to_state(state.FORWARD)
+        self.move_to_state(state.STOPPED)
 
     def send(self, command):
         log("Sending {}".format(command))
         self.movement_publisher.publish(command)
 
     def react(self, position, baskets):
-        if self.state == State.FORWARD:
+        if self.state == State.STOPPED:
+            self.react_stopped(position, baskets)
+        elif self.state == State.FORWARD:
             self.react_forward(position, baskets)
         elif self.state == State.TURNING:
             self.react_turning(position, baskets)
@@ -67,6 +69,9 @@ class BasketballLogic:
             self.react_centering(position, baskets)
         elif self.state == State.THROWING:
             self.react_throwing(position, baskets)
+
+    def react_stopped(self, position, baskets):
+        self.send("stop")
 
     def react_forward(self, position, baskets):
         if (time.time() - self.forward_start_time) > TIME_MOVING_FORWARD:
@@ -161,12 +166,20 @@ class BasketballLogic:
 logic = BasketballLogic()
 
 def new_object_callback(message):
-    thrower.react(message.data.split("\n")[0],
+    logic.react(message.data.split("\n")[0],
                   message.data.split("\n")[1])
+
+
+def new_referee_command_callback(message):
+    if message.data == "start":
+        logic.move_to_state(State.FORWARD)
+    elif message.data == "stop":
+        logic.move_to_state(State.STOPPED)
 
 
 if __name__ == "__main__":
     rospy.init_node("ball_thrower")
     rospy.Subscriber("image_processing/objects", String, new_object_callback)
-    
+    rospy.Subscriber("robot_main/referee", String, new_referee_command_callback)
+
     rospy.spin()
