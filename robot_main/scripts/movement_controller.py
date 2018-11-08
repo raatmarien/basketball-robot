@@ -24,6 +24,7 @@ from std_msgs.msg import String
 
 def movement_controller():
     pub = rospy.Publisher("movement", String, queue_size=10)
+    referee_pub = rospy.Publisher("robot_main/referee", String, queue_size=10)
     rospy.init_node("movement_controller")
     rate = rospy.Rate(30)
 
@@ -36,9 +37,12 @@ def movement_controller():
                              "r": "toggle_red_led", "p": "stop", "l":
                              "turn_left", "t": "throw:2000", "z":
                              "turn_left", "x": "turn_right" }
+        referee_translation_dict = { "start": "start", "stop": "stop" }
 
         if command in translation_dict:
             pub.publish(translation_dict[command])
+        elif command in referee_translation_dict:
+            referee_pub.publish(referee_translation_dict[command])
         else:
             rospy.loginfo("Invalid command typed!")
 

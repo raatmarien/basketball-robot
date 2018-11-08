@@ -1,4 +1,4 @@
-2#!/usr/bin/env python
+#!/usr/bin/env python
 # basketball_logic.py -- This node should do the main logic of the
 # robot as described in the state diagram. It assumes we want to score in the
 # blue basket now.
@@ -50,7 +50,7 @@ class BasketballLogic:
     def __init__(self):
         self.turn_left = True
         self.movement_publisher = rospy.Publisher("movement", String, queue_size=10)
-        self.move_to_state(state.STOPPED)
+        self.move_to_state(State.STOPPED)
 
     def send(self, command):
         log("Sending {}".format(command))
@@ -153,9 +153,9 @@ class BasketballLogic:
         self.throw()
 
     def move_to_state(self, state):
-        if state == state.FORWARD:
+        if state == State.FORWARD:
             self.forward_start_time = time.time()
-        elif state == state.THROWING:
+        elif state == State.THROWING:
             self.throwing_start_time = time.time()
         self.state = state
 
@@ -178,7 +178,7 @@ def new_referee_command_callback(message):
 
 
 if __name__ == "__main__":
-    rospy.init_node("ball_thrower")
+    rospy.init_node("basketball_logic")
     rospy.Subscriber("image_processing/objects", String, new_object_callback)
     rospy.Subscriber("robot_main/referee", String, new_referee_command_callback)
 
