@@ -27,9 +27,9 @@ from time import sleep
 
 # Constants
 # Wheel angles in degrees
-WHEEL_ONE_ANGLE = 120
-WHEEL_TWO_ANGLE = 60
-WHEEL_THREE_ANGLE = 270
+WHEEL_ONE_ANGLE = 150
+WHEEL_TWO_ANGLE = 270
+WHEEL_THREE_ANGLE = 40
 WHEEL_DISTANCE_FROM_CENTER = 0.133
 ROBOT_SPEED = 30
 ROBOT_TURN_SPEED = 50
@@ -136,8 +136,9 @@ class Driver:
 
         while not rospy.is_shutdown():
             self.main_board.set_wheels(self.wheel_one_speed, self.wheel_two_speed, self.wheel_three_speed)
-            messages = self.main_board.read()
 
+
+            messages = self.main_board.read()
             for message in messages.split("\n"):
                 if message != "":
                     rospy.loginfo("Sending hardware msg: " + message)

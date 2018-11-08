@@ -37,8 +37,8 @@ HORIZONTAL_CAMERA = True
 # Important reading about cv2 color spaces:
 # https://docs.opencv.org/3.4.2/df/d9d/tutorial_py_colorspaces.html
 # Hue goes from 0 to 179
-BALL_COLOR_LOWER_BOUND = np.array([60, 100, 40])
-BALL_COLOR_UPPER_BOUND = np.array([90, 255, 255])
+BALL_COLOR_LOWER_BOUND = np.array([30, 100, 70])
+BALL_COLOR_UPPER_BOUND = np.array([70, 255, 255])
 
 # These aren't actually calibrated yet
 BLUE_BASKET_LOWER_BOUND = np.array([90, 200, 100])
@@ -98,7 +98,7 @@ class ImageProcessor():
 
         if DEBUG:
             rospy.loginfo(str(self.balls_in_frame))
-            self.print_mask(blue_basket_mask)
+            self.print_mask(ball_mask)
 
     def find_balls(self, mask, depth):
         img, contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL,
@@ -126,10 +126,15 @@ class ImageProcessor():
         pts = np.where(cimg == 255)
         distances = []
         distances.append(depth[pts[0], pts[1]])
-        
-        distances = np.sort(distances)
 
-        distance = np.mean(distances)
+        dists = np.array(distances)
+        nz = dists > 0
+        nzd = dists[nz]
+
+        if nzd.size == 0:
+            return 0
+        
+        distance = np.mean(nzd)
 
         return distance * self.depth_scale
 

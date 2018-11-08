@@ -5,4 +5,5 @@
         name="referee_listener" output="screen" />
   <include file="$(find robot_hardware)/launch/robot_hardware.launch" />
   <include file="$(find robot_logic)/launch/robot_logic.launch" />
+  <include file="$(find robot_image)/launch/robot_image.launch" />
 </launch>

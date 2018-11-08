@@ -32,8 +32,8 @@ from ast import literal_eval
 CENTER_REGION = 0.05
 CENTER_BASKET_REGION = 0.05
 TIME_MOVING_FORWARD = 5
-TIME_THROWING = 3
-DISTANCE_TO_CENTER_BALL = 0.2
+TIME_THROWING = 2
+DISTANCE_TO_CENTER_BALL = 0.5
 CAMERA_FOV = 29.0 # Trial and error (mostly error though)
 
 
@@ -57,6 +57,7 @@ class BasketballLogic:
         self.movement_publisher.publish(command)
 
     def react(self, position, baskets):
+        log("Reacting in state {}".format(self.state))
         if self.state == State.STOPPED:
             self.react_stopped(position, baskets)
         elif self.state == State.FORWARD:
@@ -74,6 +75,7 @@ class BasketballLogic:
         self.send("stop")
 
     def react_forward(self, position, baskets):
+        log("In state forward")
         if (time.time() - self.forward_start_time) > TIME_MOVING_FORWARD:
             self.move_to_state(State.TURNING)
             self.react(position, baskets)
@@ -87,7 +89,8 @@ class BasketballLogic:
         self.send("forward")
 
     def react_turning(self, position, baskets):
-        if postion != "None":
+        log("In state turning")
+        if position != "None":
             self.move_to_state(State.MOVING_AND_TURNING)
             self.react(position, baskets)
             return
@@ -98,6 +101,7 @@ class BasketballLogic:
             self.send("turn_right")
 
     def react_moving_and_turning(self, position, baskets):
+        log("In state moving and turning")
         if position == "None":
             self.move_to_state(State.TURNING)
             self.react(position, baskets)
@@ -106,22 +110,35 @@ class BasketballLogic:
         pos = float(position.split(":")[0])
         distance = float(position.split(":")[1])
 
-        if distance < DISTANCE_TO_CENTER_BALL:
+        if distance < DISTANCE_TO_CENTER_BALL and pos < 0.05 and pos > -0.05:
             self.move_to_state(State.CENTERING)
             self.react(position, baskets)
             return
 
-        rotational_speed = max(min(pos, 0.1), -0.1) * 100
+        rotational_speed = max(min(pos, 0.1), -0.1) * 500
 
-        self.send("movement:30:{}:{}".format(pos * CAMERA_FOV,
+        if distance < DISTANCE_TO_CENTER_BALL:
+            speed = 0
+        else:
+            speed = 30
+
+        self.send("movement:{}:{}:{}".format(speed, pos * CAMERA_FOV,
                                              rotational_speed))
 
     def react_centering(self, position, baskets):
+        log("In state centering")
         if position == "None":
             self.move_to_state(State.TURNING)
             self.react(position, baskets)
             return
 
+        pos = float(position.split(":")[0])
+
+        if pos > 0.06 or pos < -0.06:
+            self.move_to_state(State.MOVING_AND_TURNING)
+            self.react(position, baskets)
+            return
+        
         blue_basket_message = baskets.split(":")[0]
         log("Blue basket: {}".format(blue_basket_message))
         blue_basket = literal_eval(blue_basket_message)
@@ -140,20 +157,22 @@ class BasketballLogic:
             return
 
         if horizontal_basket_position > CENTER_BASKET_REGION:
-            self.send("movement:2:-90:8")
+            self.send("movement:8:-90:32")
         elif horizontal_basket_position < -CENTER_BASKET_REGION:
-            self.send("movement:2:90:-8")
+            self.send("movement:8:90:-32")
 
     def react_throwing(self, position, baskets):
+        log("In state throwing")
         if (time.time() - self.throwing_start_time) > TIME_THROWING:
             self.move_to_state(State.TURNING)
-            self.throw(50)
+            self.send("throw:50")
             self.react(position, baskets)
             return
 
         self.throw()
 
     def move_to_state(self, state):
+        log("Moving to state {}".format(state))
         if state == State.FORWARD:
             self.forward_start_time = time.time()
         elif state == State.THROWING:
