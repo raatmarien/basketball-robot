@@ -147,6 +147,7 @@ class BasketballLogic:
     def react_throwing(self, position, baskets):
         if (time.time() - self.throwing_start_time) > TIME_THROWING:
             self.move_to_state(State.TURNING)
+            self.throw(50)
             self.react(position, baskets)
             return
 
@@ -171,7 +172,7 @@ def new_object_callback(message):
 
 
 def new_referee_command_callback(message):
-    if message.data == "start":
+    if message.data == "start" and logic.state == State.STOPPED:
         logic.move_to_state(State.FORWARD)
     elif message.data == "stop":
         logic.move_to_state(State.STOPPED)
