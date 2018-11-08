@@ -44,6 +44,7 @@ class Driver:
         self.wheel_three_speed = 0
         self.throw_speed = 800
 
+
     def get_speed_for_wheel(self, wheel_angle, drive_angle,
                             robot_speed, wheel_distance_from_center,
                             robot_angular_velocity):
@@ -120,6 +121,12 @@ class Driver:
                 self.main_board.send_ping(splitted[1], splitted[2])
             except:
                 rospy.loginfo("Incorrect ping command received and ignored")
+        elif command.split(":")[0] == "servo":
+            try:
+                splitted = command.split(":")
+                self.main_board.set_servo(int(splitted[1]))
+            except:
+                rospy.loginfo("Incorrect servo command received and ignored")
 
     def movement_listener(self):
         rospy.init_node("movement_listener")
@@ -130,6 +137,7 @@ class Driver:
         while not rospy.is_shutdown():
             self.main_board.set_wheels(self.wheel_one_speed, self.wheel_two_speed, self.wheel_three_speed)
             messages = self.main_board.read()
+
             for message in messages.split("\n"):
                 if message != "":
                     rospy.loginfo("Sending hardware msg: " + message)

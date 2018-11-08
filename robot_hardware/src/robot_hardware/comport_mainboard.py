@@ -42,6 +42,7 @@ class ComportMainboard(threading.Thread):
     def write(self, comm):
         if self.connection is not None:
             try:
+                rospy.loginfo("Sending " + comm)
                 self.connection.write(comm + "\r\n")
                 self.buffered = self.read()
             except:
@@ -69,6 +70,10 @@ class ComportMainboard(threading.Thread):
     def set_throw(self, speed):
         rospy.loginfo("Setting thrower to speed " + str(speed))
         self.write("d:{}".format(speed))
+
+    def set_servo(self, value):
+        rospy.loginfo("Setting servo to " + str(value))
+        self.write("sv:{}".format(value))
 
     def send_ping(self, robotID, fieldID):
         ack_message = 'a' + fieldID + robotID + 'ACK-----'
