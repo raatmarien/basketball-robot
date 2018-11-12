@@ -51,6 +51,7 @@ class BasketballLogic:
         self.turn_left = True
         self.movement_publisher = rospy.Publisher("movement", String, queue_size=10)
         self.move_to_state(State.STOPPED)
+        self.blue_basket_distance = 0
 
     def send(self, command):
         log("Sending {}".format(command))
@@ -110,7 +111,7 @@ class BasketballLogic:
         pos = float(position.split(":")[0])
         distance = float(position.split(":")[1])
 
-        if distance < DISTANCE_TO_CENTER_BALL and pos < 0.05 and pos > -0.05:
+        if distance < DISTANCE_TO_CENTER_BALL and pos < 0.03 and pos > -0.03:
             self.move_to_state(State.CENTERING)
             self.react(position, baskets)
             return
@@ -134,20 +135,22 @@ class BasketballLogic:
 
         pos = float(position.split(":")[0])
 
-        if pos > 0.06 or pos < -0.06:
+        if pos > 0.04 or pos < -0.04:
             self.move_to_state(State.MOVING_AND_TURNING)
             self.react(position, baskets)
             return
         
         blue_basket_message = baskets.split(":")[0]
         log("Blue basket: {}".format(blue_basket_message))
-        blue_basket = literal_eval(blue_basket_message)
-        if blue_basket is None:
+        blue_basket_msg = literal_eval(blue_basket_message)
+        if blue_basket_msg is None:
             log("Basket not found, assume it is on the left!")
             horizontal_basket_position = -1.0
         else:
+            (blue_basket, distance) = blue_basket_msg
             (bx, by, bw, bh) = blue_basket
             horizontal_basket_position = bx + (bw / 2.0) - 0.5
+            self.blue_basket_distance = distance
             log("Basket position is {}".format(horizontal_basket_position))
 
         if horizontal_basket_position >= -CENTER_BASKET_REGION and \
@@ -181,7 +184,34 @@ class BasketballLogic:
 
     def throw(self):
         self.send("forward")
-        self.send("throw:200")
+        speed = self.get_throw_speed(self.blue_basket_distance)
+        self.send("throw:{}".format(int(round(speed))))
+
+    def get_throw_speed(self, distance):
+        speeds = [(0.76, 172),
+                  (1.157, 175),
+                  (1.52, 180),
+                  (2.44, 188),
+                  (2.61, 240),
+                  (3.42, 270)]
+
+        (min_dist, min_speed) = speeds[0]
+        (sec_dist, sec_speed) = speeds[1]
+        (sm_dist, sm_speed) = speeds[len(speeds) - 2]
+        (max_dist, max_speed) = speeds[len(speeds) - 1]
+        if distance <= min_dist:
+            speed_per_dist = (sec_speed - min_speed) / (sec_dist - min_dist)
+            return min_speed - ((min_dist - distance) * speed_per_dist)
+        elif distance >= max_dist:
+            speed_per_dist = (max_speed - sm_speed) / (max_dist - sm_dist)
+            return max_speed + ((distance - max_dist) * speed_per_dist)
+        else:
+            (prev_dist, prev_speed) = speeds[0]
+            for (cur_dist, cur_speed) in speeds[1:]:
+                if distance < cur_dist:
+                    speed_per_dist = (cur_speed - prev_speed) / (cur_dist - prev_dist)
+                    return prev_speed + ((distance - prev_dist) * speed_per_dist)
+
 
 logic = BasketballLogic()
 

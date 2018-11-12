@@ -32,7 +32,6 @@ FRAME_RATE = 30
 
 MIN_CONTOUR_AREA = 10
 DEBUG = False
-HORIZONTAL_CAMERA = True
 
 # Important reading about cv2 color spaces:
 # https://docs.opencv.org/3.4.2/df/d9d/tutorial_py_colorspaces.html
@@ -87,14 +86,20 @@ class ImageProcessor():
         blue_basket_mask = cv2.inRange(hsv_image,
                                        BLUE_BASKET_LOWER_BOUND,
                                        BLUE_BASKET_UPPER_BOUND)
-        self.blue_basket = self.find_basket(blue_basket_mask)
+        self.blue_basket = self.find_basket(blue_basket_mask, depth_image)
 
         magenta_basket_mask = cv2.inRange(hsv_image,
                                           MAGENTA_BASKET_LOWER_BOUND,
                                           MAGENTA_BASKET_UPPER_BOUND)
-        self.magenta_basket = self.find_basket(magenta_basket_mask)
+        self.magenta_basket = self.find_basket(magenta_basket_mask, depth_image)
 
         self.send_objects()
+
+        if self.blue_basket is not None:
+            (d, distance) = self.blue_basket
+            rospy.loginfo("Distance from blue basket is {}".format(distance))
+        else:
+            rospy.loginfo("No basket seen")
 
         if DEBUG:
             rospy.loginfo(str(self.balls_in_frame))
@@ -138,32 +143,31 @@ class ImageProcessor():
 
         return distance * self.depth_scale
 
-    def find_basket(self, mask):
+    def find_basket(self, mask, depth):
         img, contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL,
-                                                   cv2.CHAIN_APPROX_SIMPLE)
+                                                    cv2.CHAIN_APPROX_SIMPLE)
 
         basket = None
         biggest_contour_size = MIN_CONTOUR_AREA
+        dist = None
 
         for contour in contours:
             contour_size = cv2.contourArea(contour)
 
             if contour_size > biggest_contour_size:
                 biggest_contour_size = contour_size
+                dist = self.get_corrected_mean_distance(contour, depth) 
                 basket = cv2.boundingRect(contour)
 
         if basket is None:
             return None
 
-        if HORIZONTAL_CAMERA:
-            (sx, sy, sw, sh) = basket
-        else:
-            (sy, sx, sh, sw) = basket
+        (sx, sy, sw, sh) = basket
             
         wf = float(WIDTH)
         hf = float(HEIGHT)
         # In relative coordinates
-        return (sx / wf, sy / hf, sw / wf, sh / hf)
+        return ((sx / wf, sy / hf, sw / wf, sh / hf), dist)
 
     def get_largest_ball(self):
         debug_log(str(len(self.balls_in_frame)) + " balls found")
@@ -181,10 +185,8 @@ class ImageProcessor():
                     max_ball_distance = distance
             (x, y, width, height) = max_ball
             rospy.loginfo("Ball: " + str(max_ball))
-            if HORIZONTAL_CAMERA:
-                ball_pos = str(((x + (width / 2)) / float(WIDTH)) - 0.5)
-            else:
-                ball_pos = str(-1 * (((y + (height / 2)) / float(HEIGHT)) - 0.5))
+            ball_pos = str(((x + (width / 2)) / float(WIDTH)) - 0.5)
+
             rospy.loginfo("Max ball " + str(max_ball))
             debug_log("Ball at " + ball_pos)
             rospy.loginfo("Distance = " + str(distance))
@@ -197,8 +199,7 @@ class ImageProcessor():
         baskets = "{}:{}".format(self.blue_basket, self.magenta_basket)
         message = "{}\n{}".format(ball, baskets)
         self.object_publisher.publish(message)
-
-
+        
     def print_mask(self, mask):
         coverage = [0]*64
         for y in range(480):

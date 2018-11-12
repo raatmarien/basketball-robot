@@ -39,6 +39,13 @@ def movement_controller():
                              "turn_left", "x": "turn_right" }
         referee_translation_dict = { "start": "start", "stop": "stop" }
 
+        # try:
+        #     speed = int(command)
+        #     rospy.loginfo("throw:"+command)
+        #     pub.publish("throw:" + command)
+        # except:
+        #     pass
+        
         if command in translation_dict:
             pub.publish(translation_dict[command])
         elif command in referee_translation_dict:
