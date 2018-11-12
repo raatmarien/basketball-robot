@@ -24,6 +24,7 @@ from std_msgs.msg import String
 import numpy as np
 import cv2
 import pyrealsense2 as rs
+import time
 
 # Constants: TODO put this in a conf file
 WIDTH = 1280
@@ -36,15 +37,15 @@ DEBUG = False
 # Important reading about cv2 color spaces:
 # https://docs.opencv.org/3.4.2/df/d9d/tutorial_py_colorspaces.html
 # Hue goes from 0 to 179
-BALL_COLOR_LOWER_BOUND = np.array([30, 100, 70])
-BALL_COLOR_UPPER_BOUND = np.array([70, 255, 255])
+# Ridicilous, but the camera decided to calibrate really weirdly
+BALL_COLOR_LOWER_BOUND = np.array([50, 20, 0])
+BALL_COLOR_UPPER_BOUND = np.array([120, 100, 200])
 
-# These aren't actually calibrated yet
-BLUE_BASKET_LOWER_BOUND = np.array([90, 200, 100])
-BLUE_BASKET_UPPER_BOUND = np.array([125, 255, 255])
+BLUE_BASKET_LOWER_BOUND = np.array([130, 100, 100])
+BLUE_BASKET_UPPER_BOUND = np.array([210, 150, 255])
 
-MAGENTA_BASKET_LOWER_BOUND = np.array([125, 200, 100])
-MAGENTA_BASKET_UPPER_BOUND = np.array([170, 255, 255])
+MAGENTA_BASKET_LOWER_BOUND = np.array([165, 150, 50])
+MAGENTA_BASKET_UPPER_BOUND = np.array([210, 255, 200])
 
 def debug_log(text):
     if DEBUG:
@@ -62,6 +63,7 @@ class ImageProcessor():
         # TODO: do we want higher res? Or higher fps? Or both?
         config.enable_stream(rs.stream.depth, WIDTH, HEIGHT, rs.format.z16, FRAME_RATE)
         config.enable_stream(rs.stream.color, WIDTH, HEIGHT, rs.format.bgr8, FRAME_RATE)
+
         align_to = rs.stream.color
         self.align = rs.align(align_to)
         self.profile = self.pipeline.start(config)
@@ -69,6 +71,34 @@ class ImageProcessor():
         depth_sensor = self.profile.get_device().first_depth_sensor()
         self.depth_scale = depth_sensor.get_depth_scale()
 
+        ctx = rs.context()
+        devices = ctx.query_devices()
+        for dev in devices:
+            if dev.supports(rs.camera_info.product_id) and dev.supports(rs.camera_info.name):
+                rospy.loginfo("Found camera device: {}".format(dev.get_info(rs.camera_info.name)))
+                sensors = dev.query_sensors()
+                for sensor in sensors:
+                    if sensor.get_info(rs.camera_info.name) == "RGB Camera" and sensor.supports(
+                            rs.option.exposure) and sensor.supports(rs.option.gain):
+                        rospy.loginfo("Setting RGB camera sensor settings")
+                        sensor.set_option(rs.option.enable_auto_exposure, 1)
+                        sensor.set_option(rs.option.white_balance, 3000)
+                        sensor.set_option(rs.option.enable_auto_white_balance, 0)
+                        rospy.loginfo("exposure: {}".format(sensor.get_option(rs.option.exposure)))
+                        rospy.loginfo("white balance: {}".format(sensor.get_option(rs.option.white_balance)))
+                        rospy.loginfo("gain: {}".format(sensor.get_option(rs.option.gain)))
+                        rospy.loginfo(
+                            "auto exposure enabled: {}".format(sensor.get_option(rs.option.enable_auto_exposure)))
+                        time.sleep(2)
+                        sensor.set_option(rs.option.enable_auto_exposure, 0)
+                        rospy.loginfo(
+                            "auto exposure enabled: {}".format(sensor.get_option(rs.option.enable_auto_exposure)))
+                        rospy.loginfo("exposure: {}".format(sensor.get_option(rs.option.exposure)))  # 166
+                        rospy.loginfo("white balance: {}".format(sensor.get_option(rs.option.white_balance)))
+                        rospy.loginfo("gain: {}".format(sensor.get_option(rs.option.gain)))  # 64
+                        break
+                break
+        
     def process_image(self):
         rospy.loginfo("Image: scanning frame")
         frames = self.pipeline.wait_for_frames()

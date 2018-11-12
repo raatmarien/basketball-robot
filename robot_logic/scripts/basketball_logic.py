@@ -31,8 +31,8 @@ from ast import literal_eval
 # Constants
 CENTER_REGION = 0.05
 CENTER_BASKET_REGION = 0.05
-TIME_MOVING_FORWARD = 5
-TIME_THROWING = 2
+TIME_MOVING_FORWARD = 8
+TIME_THROWING = 1.5
 DISTANCE_TO_CENTER_BALL = 0.5
 CAMERA_FOV = 29.0 # Trial and error (mostly error though)
 
