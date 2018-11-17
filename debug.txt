@@ -1,0 +1,10 @@
+* our old mainboard gets all throwers to work
+* our new mainboard doesn't get any thrower to work
+* our thrower works with someone else's mainboard
+
+Hypothesis:
+
+There is something wrong with both our new mainboard.
+
+But our connector, thrower and code are okay.
+

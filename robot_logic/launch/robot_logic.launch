@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="robot_logic" type="basketball_logic.py"
+        name="basketball_logic" output="screen" />
+</launch>
