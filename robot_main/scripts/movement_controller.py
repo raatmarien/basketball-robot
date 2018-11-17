@@ -42,8 +42,8 @@ def movement_controller():
 
        	try:
              speed = int(command)
-             rospy.loginfo("servo:"+command)
-             pub.publish("servo:" + command)
+             rospy.loginfo("throw:"+command)
+             pub.publish("throw:" + command)
         except:
              pass
         
