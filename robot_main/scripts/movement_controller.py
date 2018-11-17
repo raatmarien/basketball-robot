@@ -36,13 +36,14 @@ def movement_controller():
                              "left", "d": "right", "g": "get_speeds",
                              "r": "toggle_red_led", "p": "stop", "l":
                              "turn_left", "t": "throw:2000", "z":
-                             "turn_left", "x": "turn_right" }
+                             "turn_left", "x": "turn_right", "y": "servo:2100", 
+			     "u": "servo:1800"}
         referee_translation_dict = { "start": "start", "stop": "stop" }
 
        	try:
              speed = int(command)
-             rospy.loginfo("throw:"+command)
-             pub.publish("throw:" + command)
+             rospy.loginfo("servo:"+command)
+             pub.publish("servo:" + command)
         except:
              pass
         
