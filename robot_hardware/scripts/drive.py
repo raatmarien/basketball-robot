@@ -71,11 +71,12 @@ class Driver:
 
     def set_wheels(self, w1, w2, w3):
         rospy.loginfo("Changing wheels")
-        self.wheel_one_speed = w1
-        self.wheel_two_speed = w2
-        self.wheel_three_speed = w3
+        if w1 != self.wheel_one_speed or w2 != self.wheel_two_speed or w3 != self.wheel_three_speed:
+            self.wheel_one_speed = w1
+            self.wheel_two_speed = w2
+            self.wheel_three_speed = w3
 
-        self.main_board.set_wheels(self.wheel_one_speed, self.wheel_two_speed, self.wheel_three_speed)
+            self.main_board.set_wheels(self.wheel_one_speed, self.wheel_two_speed, self.wheel_three_speed)
 
 
     def movement_callback(self, command):
@@ -102,8 +103,9 @@ class Driver:
         elif command.split(":")[0] == "throw":
             try:
                 splitted = command.split(":")
-                self.throw_speed = splitted[1]
-                self.main_board.set_throw(self.throw_speed)
+                if splitted[1] != self.throw_speed:
+                    self.throw_speed = splitted[1]
+                    self.main_board.set_throw(self.throw_speed)
             except:
                 rospy.loginfo("Incorrect throw command received and ignored")
         elif command.split(":")[0] == "movement":
@@ -132,11 +134,11 @@ class Driver:
         rospy.init_node("movement_listener")
         rospy.Subscriber("movement", String, self.movement_callback)
         self.mainboard_out = rospy.Publisher("mainboard", String, queue_size=10)
-        rate = rospy.Rate(5)
+        rate = rospy.Rate(1)
 
         while not rospy.is_shutdown():
             self.main_board.set_wheels(self.wheel_one_speed, self.wheel_two_speed, self.wheel_three_speed)
-
+            self.main_board.set_throw(self.throw_speed)
 
             messages = self.main_board.read()
             for message in messages.split("\n"):
