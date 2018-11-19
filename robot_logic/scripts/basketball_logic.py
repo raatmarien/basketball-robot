@@ -160,9 +160,9 @@ class BasketballLogic:
             return
 
         if horizontal_basket_position > CENTER_BASKET_REGION:
-            self.send("movement:8:-90:32")
+            self.send("movement:16:-90:64")
         elif horizontal_basket_position < -CENTER_BASKET_REGION:
-            self.send("movement:8:90:-32")
+            self.send("movement:16:90:-64")
 
     def react_throwing(self, position, baskets):
         log("In state throwing")
@@ -188,12 +188,13 @@ class BasketballLogic:
         self.send("throw:{}".format(int(round(speed))))
 
     def get_throw_speed(self, distance):
-        speeds = [(0.76, 172),
-                  (1.157, 175),
-                  (1.52, 180),
-                  (2.44, 188),
-                  (2.61, 240),
-                  (3.42, 270)]
+        speeds = [(0.75, 150), (2.0, 165)]
+        # speeds = [(0.76, 172),
+        #           (1.157, 175),
+        #           (1.52, 180),
+        #           (2.44, 188),
+        #           (2.61, 240),
+        #           (3.42, 270)]
 
         (min_dist, min_speed) = speeds[0]
         (sec_dist, sec_speed) = speeds[1]

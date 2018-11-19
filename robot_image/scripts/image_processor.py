@@ -31,21 +31,21 @@ WIDTH = 1280
 HEIGHT = 720
 FRAME_RATE = 30
 
-MIN_CONTOUR_AREA = 10
+MIN_BALL_CONTOUR_AREA = 30
+MIN_BASKET_CONTOUR_AREA = 100
 DEBUG = False
 
 # Important reading about cv2 color spaces:
 # https://docs.opencv.org/3.4.2/df/d9d/tutorial_py_colorspaces.html
 # Hue goes from 0 to 179
-# Ridicilous, but the camera decided to calibrate really weirdly
-BALL_COLOR_LOWER_BOUND = np.array([50, 20, 0])
-BALL_COLOR_UPPER_BOUND = np.array([120, 100, 200])
+BALL_COLOR_LOWER_BOUND = np.array([30, 50, 50])
+BALL_COLOR_UPPER_BOUND = np.array([100, 130, 150])
 
-BLUE_BASKET_LOWER_BOUND = np.array([130, 100, 100])
-BLUE_BASKET_UPPER_BOUND = np.array([210, 150, 255])
+BLUE_BASKET_LOWER_BOUND = np.array([100, 140, 0])
+BLUE_BASKET_UPPER_BOUND = np.array([120, 200, 255])
 
-MAGENTA_BASKET_LOWER_BOUND = np.array([165, 150, 50])
-MAGENTA_BASKET_UPPER_BOUND = np.array([210, 255, 200])
+MAGENTA_BASKET_LOWER_BOUND = np.array([150, 150, 100])
+MAGENTA_BASKET_UPPER_BOUND = np.array([255, 185, 160])
 
 def debug_log(text):
     if DEBUG:
@@ -144,7 +144,7 @@ class ImageProcessor():
         for contour in contours:
             contour_size = cv2.contourArea(contour)
 
-            if contour_size < MIN_CONTOUR_AREA:
+            if contour_size < MIN_BALL_CONTOUR_AREA:
                 continue
 
             rect = cv2.boundingRect(contour)
@@ -178,7 +178,7 @@ class ImageProcessor():
                                                     cv2.CHAIN_APPROX_SIMPLE)
 
         basket = None
-        biggest_contour_size = MIN_CONTOUR_AREA
+        biggest_contour_size = MIN_BASKET_CONTOUR_AREA
         dist = None
 
         for contour in contours:
@@ -226,6 +226,7 @@ class ImageProcessor():
 
     def send_objects(self):
         ball = self.get_largest_ball()
+        rospy.loginfo(str(ball))
         baskets = "{}:{}".format(self.blue_basket, self.magenta_basket)
         message = "{}\n{}".format(ball, baskets)
         self.object_publisher.publish(message)
