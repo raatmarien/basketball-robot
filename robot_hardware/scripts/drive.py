@@ -42,7 +42,7 @@ class Driver:
         self.wheel_one_speed = 0
         self.wheel_two_speed = 0
         self.wheel_three_speed = 0
-        self.throw_speed = 800
+        self.throw_speed = 100
 
 
     def get_speed_for_wheel(self, wheel_angle, drive_angle,
@@ -70,7 +70,6 @@ class Driver:
         self.set_wheels(int(round(w1)), int(round(w2)), int(round(w3)))
 
     def set_wheels(self, w1, w2, w3):
-        rospy.loginfo("Changing wheels")
         if w1 != self.wheel_one_speed or w2 != self.wheel_two_speed or w3 != self.wheel_three_speed:
             self.wheel_one_speed = w1
             self.wheel_two_speed = w2
@@ -81,7 +80,6 @@ class Driver:
 
     def movement_callback(self, command):
         command = str(command)[7:][:-1]
-        rospy.loginfo("Recieved command: " + command)
         if command == "forward":
             self.set_movement(ROBOT_SPEED, 0, 0)
         elif command == "backward":
@@ -103,7 +101,7 @@ class Driver:
         elif command.split(":")[0] == "throw":
             try:
                 splitted = command.split(":")
-                if splitted[1] != self.throw_speed:
+                if int(splitted[1]) != int(self.throw_speed):
                     self.throw_speed = splitted[1]
                     self.main_board.set_throw(self.throw_speed)
             except:
@@ -111,9 +109,9 @@ class Driver:
         elif command.split(":")[0] == "movement":
             try:
                 splitted = command.split(":")
-                self.set_movement(float(splitted[1]),
-                                  float(splitted[2]),
-                                  float(splitted[3]))
+                self.set_movement(int(round(float(splitted[1]))),
+                                  int(round(float(splitted[2]))),
+                                  int(round(float(splitted[3]))))
             except:
                 rospy.loginfo("Incorrect movement command received and ignored")
         elif command.split(":")[0] == "ping":

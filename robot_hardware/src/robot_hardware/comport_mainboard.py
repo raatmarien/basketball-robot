@@ -44,7 +44,8 @@ class ComportMainboard(threading.Thread):
             try:
                 rospy.loginfo("Sending " + comm)
                 self.connection.write(comm + "\r\n")
-                self.buffered = self.read()
+                while self.connection.in_waiting:
+                    self.buffered += self.read()
             except:
                 print('mainboard: err write ' + comm)
 
@@ -64,15 +65,12 @@ class ComportMainboard(threading.Thread):
 
     def set_wheels(self, wheel_one, wheel_two, wheel_three):
         if self.connection_opened:
-            rospy.loginfo("Setting wheels to {} {} {}".format(wheel_one, wheel_two, wheel_three))
             self.write("sd:{}:{}:{}".format(wheel_one, wheel_two, wheel_three))
 
     def set_throw(self, speed):
-        rospy.loginfo("Setting thrower to speed " + str(speed))
         self.write("d:{}".format(speed))
 
     def set_servo(self, value):
-        rospy.loginfo("Setting servo to " + str(value))
         self.write("sv:{}".format(value))
 
     def send_ping(self, robotID, fieldID):

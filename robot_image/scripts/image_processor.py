@@ -100,7 +100,7 @@ class ImageProcessor():
                 break
         
     def process_image(self):
-        rospy.loginfo("Image: scanning frame")
+        # rospy.loginfo("Image: scanning frame")
         frames = self.pipeline.wait_for_frames()
         aligned_frames = self.align.process(frames)
         depth_frame = aligned_frames.get_depth_frame()
@@ -127,8 +127,9 @@ class ImageProcessor():
 
         if self.blue_basket is not None:
             (d, distance) = self.blue_basket
-            rospy.loginfo("Distance from blue basket is {}".format(distance))
-        else:
+            if DEBUG:
+                rospy.loginfo("Distance from blue basket is {}".format(distance))
+        elif DEBUG:
             rospy.loginfo("No basket seen")
 
         if DEBUG:
@@ -214,19 +215,14 @@ class ImageProcessor():
                     max_ball = (x, y, width, height)
                     max_ball_distance = distance
             (x, y, width, height) = max_ball
-            rospy.loginfo("Ball: " + str(max_ball))
             ball_pos = str(((x + (width / 2)) / float(WIDTH)) - 0.5)
-
-            rospy.loginfo("Max ball " + str(max_ball))
             debug_log("Ball at " + ball_pos)
-            rospy.loginfo("Distance = " + str(distance))
             return ball_pos + ":" + str(max_ball_distance)
         else:
             return "None"
 
     def send_objects(self):
         ball = self.get_largest_ball()
-        rospy.loginfo(str(ball))
         baskets = "{}:{}".format(self.blue_basket, self.magenta_basket)
         message = "{}\n{}".format(ball, baskets)
         self.object_publisher.publish(message)

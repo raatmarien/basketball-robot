@@ -30,11 +30,17 @@ from ast import literal_eval
 
 # Constants
 CENTER_REGION = 0.05
-CENTER_BASKET_REGION = 0.05
+CENTER_BASKET_REGION = 0.04
 TIME_MOVING_FORWARD = 8
 TIME_THROWING = 1.5
 DISTANCE_TO_CENTER_BALL = 0.5
 CAMERA_FOV = 29.0 # Trial and error (mostly error though)
+
+
+# Variable
+DEBUG = False
+SCORE_IN_BLUE = False # Change to False if we need to score in the
+                     # magenta basket
 
 
 class State:
@@ -44,14 +50,16 @@ class State:
 
 def log(text):
     TAG = "robot_logic/basketball_logic"
-    rospy.loginfo(TAG + ": " + text)
+    if DEBUG:
+        rospy.loginfo(TAG + ": " + text)
 
 class BasketballLogic:
     def __init__(self):
         self.turn_left = True
         self.movement_publisher = rospy.Publisher("movement", String, queue_size=10)
         self.move_to_state(State.STOPPED)
-        self.blue_basket_distance = 0
+        self.basket_distances = [0]
+        self.basket_last_seen_left = True
 
     def send(self, command):
         log("Sending {}".format(command))
@@ -59,6 +67,9 @@ class BasketballLogic:
 
     def react(self, position, baskets):
         log("Reacting in state {}".format(self.state))
+
+        self.update_basket_info(baskets)
+        
         if self.state == State.STOPPED:
             self.react_stopped(position, baskets)
         elif self.state == State.FORWARD:
@@ -72,6 +83,21 @@ class BasketballLogic:
         elif self.state == State.THROWING:
             self.react_throwing(position, baskets)
 
+    def update_basket_info(self, baskets):
+        if SCORE_IN_BLUE:
+            basket_message = baskets.split(":")[0]
+        else:
+            basket_message = baskets.split(":")[1]
+        basket_msg = literal_eval(basket_message)
+        if basket_msg is not None:
+            (basket, distance) = basket_msg
+            (bx, by, bw, bh) = basket
+            horizontal_basket_position = bx + (bw / 2.0) - 0.5
+            self.basket_distances.append(distance)
+            if len(self.basket_distances) > 5:
+                self.basket_distances = self.basket_distances[1:]
+            self.basket_last_seen_left = horizontal_basket_position < 0
+            
     def react_stopped(self, position, baskets):
         self.send("stop")
 
@@ -87,7 +113,7 @@ class BasketballLogic:
             self.react(position, baskets)
             return
 
-        self.send("forward")
+        self.send("movement:75:0:0")
 
     def react_turning(self, position, baskets):
         log("In state turning")
@@ -97,9 +123,9 @@ class BasketballLogic:
             return
 
         if self.turn_left:
-            self.send("turn_left")
+            self.send("movement:0:0:-80")
         else:
-            self.send("turn_right")
+            self.send("movement:0:0:80")
 
     def react_moving_and_turning(self, position, baskets):
         log("In state moving and turning")
@@ -116,12 +142,12 @@ class BasketballLogic:
             self.react(position, baskets)
             return
 
-        rotational_speed = max(min(pos, 0.1), -0.1) * 500
+        rotational_speed = max(min(pos, 0.1), -0.1) * 800
 
         if distance < DISTANCE_TO_CENTER_BALL:
             speed = 0
         else:
-            speed = 30
+            speed = 50 * abs(max(min(distance, 1.5), -1.5))
 
         self.send("movement:{}:{}:{}".format(speed, pos * CAMERA_FOV,
                                              rotational_speed))
@@ -135,34 +161,43 @@ class BasketballLogic:
 
         pos = float(position.split(":")[0])
 
-        if pos > 0.04 or pos < -0.04:
-            self.move_to_state(State.MOVING_AND_TURNING)
-            self.react(position, baskets)
-            return
-        
-        blue_basket_message = baskets.split(":")[0]
-        log("Blue basket: {}".format(blue_basket_message))
-        blue_basket_msg = literal_eval(blue_basket_message)
-        if blue_basket_msg is None:
-            log("Basket not found, assume it is on the left!")
-            horizontal_basket_position = -1.0
+        if SCORE_IN_BLUE:
+            basket_message = baskets.split(":")[0]
         else:
-            (blue_basket, distance) = blue_basket_msg
-            (bx, by, bw, bh) = blue_basket
+            basket_message = baskets.split(":")[1]
+        log("Basket: {}".format(basket_message))
+        basket_msg = literal_eval(basket_message)
+        if basket_msg is None:
+            log("Basket not found")
+            if self.basket_last_seen_left:
+                horizontal_basket_position = -1.0
+            else:
+                horizontal_basket_position = 1.0
+        else:
+            (basket, distance) = basket_msg
+            (bx, by, bw, bh) = basket
             horizontal_basket_position = bx + (bw / 2.0) - 0.5
-            self.blue_basket_distance = distance
             log("Basket position is {}".format(horizontal_basket_position))
 
         if horizontal_basket_position >= -CENTER_BASKET_REGION and \
-           horizontal_basket_position <= CENTER_BASKET_REGION:
+           horizontal_basket_position <= CENTER_BASKET_REGION and \
+           pos < 0.01 and pos > -0.01:
             self.move_to_state(State.THROWING)
             self.react(position, baskets)
             return
 
-        if horizontal_basket_position > CENTER_BASKET_REGION:
-            self.send("movement:16:-90:64")
-        elif horizontal_basket_position < -CENTER_BASKET_REGION:
-            self.send("movement:16:90:-64")
+        sideways_slowdown = 0.2
+        sideways_speed = 16 * (max(-sideways_slowdown,
+                                   min(sideways_slowdown,
+                                       horizontal_basket_position)) \
+                               / sideways_slowdown)
+
+        turn_slowdown = 0.1
+        turn_speed = 64 * (max(-turn_slowdown,
+                                 min(turn_slowdown, pos)) \
+                             / turn_slowdown)
+
+        self.send("movement:{}:-90:{}".format(sideways_speed, turn_speed))
 
     def react_throwing(self, position, baskets):
         log("In state throwing")
@@ -184,11 +219,12 @@ class BasketballLogic:
 
     def throw(self):
         self.send("forward")
-        speed = self.get_throw_speed(self.blue_basket_distance)
+        average_distance = sum(self.basket_distances) / len(self.basket_distances)
+        speed = self.get_throw_speed(average_distance)
         self.send("throw:{}".format(int(round(speed))))
 
     def get_throw_speed(self, distance):
-        speeds = [(0.75, 150), (2.0, 165)]
+        speeds = [(0.75, 160), (2.0, 165)]
         # speeds = [(0.76, 172),
         #           (1.157, 175),
         #           (1.52, 180),
