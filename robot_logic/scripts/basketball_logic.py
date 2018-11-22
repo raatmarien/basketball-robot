@@ -223,6 +223,11 @@ class BasketballLogic:
         speed = self.get_throw_speed(average_distance)
         self.send("throw:{}".format(int(round(speed))))
 
+    def get_throw_speed_f(self, distance):
+	inertia_const = 15
+	speed = int(-2*math.pow(10,-18)*math.pow(distance,6)+1*math.pow(10,-14)*math.pow(x,5)+2*math.pow(10,-11)*math.pow(distance,4)-2*math.pow(10,-7)*math.pow(distance,3)+0.0005*math.pow(distance,2)-0.4037*distance)+279.09)
+	return speed
+
     def get_throw_speed(self, distance):
         speeds = [(0.75, 160), (2.0, 165)]
         # speeds = [(0.76, 172),
