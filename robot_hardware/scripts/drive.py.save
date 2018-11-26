@@ -36,8 +36,6 @@ ROBOT_TURN_SPEED = 50
 
 class Driver:
     def __init__(self):
- 	rospy.init_node("movement_listener")
-
         self.main_board = ComportMainboard()
         self.main_board.run()
 
@@ -45,15 +43,10 @@ class Driver:
         self.wheel_two_speed = 0
         self.wheel_three_speed = 0
         self.throw_speed = 100
-	rospy.Timer(rospy.Duration(0.1), self.main_board_read)
+	rospy.Timer(rospy.Duration(0.2), self.main_board_read)
 
-    def main_board_read(self,args):
-	message = self.main_board.read()
-	if message == "":
-	    return         
-	rospy.loginfo("Sending hardware msg: " + message)
-        self.mainboard_out.publish(message)
-
+    def main_board_read(self, arg):
+	
 
     def get_speed_for_wheel(self, wheel_angle, drive_angle,
                             robot_speed, wheel_distance_from_center,
@@ -139,17 +132,20 @@ class Driver:
                 rospy.loginfo("Incorrect servo command received and ignored")
 
     def movement_listener(self):
+        rospy.init_node("movement_listener")
         rospy.Subscriber("movement", String, self.movement_callback)
         self.mainboard_out = rospy.Publisher("mainboard", String, queue_size=10)
-        rate = rospy.Rate(2)
+        rate = rospy.Rate(4)
 
         while not rospy.is_shutdown():
-            self.main_board.set_throw(self.throw_speed)
             self.main_board.set_wheels(self.wheel_one_speed, self.wheel_two_speed, self.wheel_three_speed)
-	    
- 	    #self.main_board_read()
-	    rate.sleep()
+            self.main_board.set_throw(self.throw_speed)
 
+            messages = self.main_board.read()
+            for message in messages.split("\n"):
+                if message != "":
+                    rospy.loginfo("Sending hardware msg: " + message)
+            rate.sleep()
 
         self.main_board.close()
 

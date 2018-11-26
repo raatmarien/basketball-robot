@@ -39,7 +39,7 @@ CAMERA_FOV = 29.0 # Trial and error (mostly error though)
 
 # Variable
 DEBUG = False
-SCORE_IN_BLUE = False # Change to False if we need to score in the
+SCORE_IN_BLUE = True # Change to False if we need to score in the
                      # magenta basket
 
 
@@ -223,19 +223,21 @@ class BasketballLogic:
         speed = self.get_throw_speed(average_distance)
         self.send("throw:{}".format(int(round(speed))))
 
-    def get_throw_speed_f(self, distance):
-	inertia_const = 15
-	speed = int(-2*math.pow(10,-18)*math.pow(distance,6)+1*math.pow(10,-14)*math.pow(x,5)+2*math.pow(10,-11)*math.pow(distance,4)-2*math.pow(10,-7)*math.pow(distance,3)+0.0005*math.pow(distance,2)-0.4037*distance)+279.09)
-	return speed
-
     def get_throw_speed(self, distance):
-        speeds = [(0.75, 160), (2.0, 165)]
-        # speeds = [(0.76, 172),
-        #           (1.157, 175),
-        #           (1.52, 180),
-        #           (2.44, 188),
-        #           (2.61, 240),
-        #           (3.42, 270)]
+	inertia_const = 30
+	speed = int(-2*math.pow(10,-18)*math.pow(distance,6)+1*math.pow(10,-14)*math.pow(distance,5)+2*math.pow(10,-11)*math.pow(distance,4)-2*math.pow(10,-7)*math.pow(distance,3)+0.0005*math.pow(distance,2)-0.4037*distance+279.09)
+	return speed-inertia_const
+
+    def get_throw_speed_h(self, distance):
+	movement_constant = 20
+        
+	#speeds = [(0.75, 160), (2.0, 165)]
+        speeds = [(0.76, 172),
+                   (1.157, 175),
+                   (1.52, 180),
+                   (2.44, 188),
+                   (2.61, 240),
+                   (3.42, 270)]
 
         (min_dist, min_speed) = speeds[0]
         (sec_dist, sec_speed) = speeds[1]
@@ -243,16 +245,16 @@ class BasketballLogic:
         (max_dist, max_speed) = speeds[len(speeds) - 1]
         if distance <= min_dist:
             speed_per_dist = (sec_speed - min_speed) / (sec_dist - min_dist)
-            return min_speed - ((min_dist - distance) * speed_per_dist)
+            return min_speed - ((min_dist - distance) * speed_per_dist)-movement_constant
         elif distance >= max_dist:
             speed_per_dist = (max_speed - sm_speed) / (max_dist - sm_dist)
-            return max_speed + ((distance - max_dist) * speed_per_dist)
+            return max_speed + ((distance - max_dist) * speed_per_dist)-movement_constant
         else:
             (prev_dist, prev_speed) = speeds[0]
             for (cur_dist, cur_speed) in speeds[1:]:
                 if distance < cur_dist:
                     speed_per_dist = (cur_speed - prev_speed) / (cur_dist - prev_dist)
-                    return prev_speed + ((distance - prev_dist) * speed_per_dist)
+                    return prev_speed + ((distance - prev_dist) * speed_per_dist)-movement_constant
 
 
 logic = BasketballLogic()

@@ -29,7 +29,7 @@ import time
 # Constants: TODO put this in a conf file
 WIDTH = 1280
 HEIGHT = 720
-FRAME_RATE = 30
+FRAME_RATE = 60
 
 MIN_BALL_CONTOUR_AREA = 30
 MIN_BASKET_CONTOUR_AREA = 100
@@ -39,12 +39,13 @@ DEBUG = False
 # https://docs.opencv.org/3.4.2/df/d9d/tutorial_py_colorspaces.html
 # Hue goes from 0 to 179
 BALL_COLOR_LOWER_BOUND = np.array([30, 50, 50])
-BALL_COLOR_UPPER_BOUND = np.array([90, 130, 150])
+BALL_COLOR_UPPER_BOUND = np.array([100, 130, 150])
 
-BLUE_BASKET_LOWER_BOUND = np.array([100, 110, 70])
-BLUE_BASKET_UPPER_BOUND = np.array([130, 250, 140])
-MAGENTA_BASKET_LOWER_BOUND = np.array([160, 150, 150])
-MAGENTA_BASKET_UPPER_BOUND = np.array([180, 180, 180])
+BLUE_BASKET_LOWER_BOUND = np.array([100, 140, 0])
+BLUE_BASKET_UPPER_BOUND = np.array([120, 200, 255])
+
+MAGENTA_BASKET_LOWER_BOUND = np.array([150, 150, 100])
+MAGENTA_BASKET_UPPER_BOUND = np.array([255, 185, 160])
 
 def debug_log(text):
     if DEBUG:
@@ -126,9 +127,8 @@ class ImageProcessor():
 
         if self.blue_basket is not None:
             (d, distance) = self.blue_basket
-            if DEBUG:
-                rospy.loginfo("Distance from blue basket is {}".format(distance))
-        elif DEBUG:
+            rospy.loginfo("Distance from blue basket is {}".format(distance))
+        else:
             rospy.loginfo("No basket seen")
 
         if DEBUG:
@@ -172,7 +172,6 @@ class ImageProcessor():
         distance = np.mean(nzd)
 
         return distance * self.depth_scale
-	#return distance
 
     def find_basket(self, mask, depth):
         img, contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL,
@@ -215,14 +214,19 @@ class ImageProcessor():
                     max_ball = (x, y, width, height)
                     max_ball_distance = distance
             (x, y, width, height) = max_ball
+            rospy.loginfo("Ball: " + str(max_ball))
             ball_pos = str(((x + (width / 2)) / float(WIDTH)) - 0.5)
+
+            rospy.loginfo("Max ball " + str(max_ball))
             debug_log("Ball at " + ball_pos)
+            rospy.loginfo("Distance = " + str(distance))
             return ball_pos + ":" + str(max_ball_distance)
         else:
             return "None"
 
     def send_objects(self):
         ball = self.get_largest_ball()
+        rospy.loginfo(str(ball))
         baskets = "{}:{}".format(self.blue_basket, self.magenta_basket)
         message = "{}\n{}".format(ball, baskets)
         self.object_publisher.publish(message)
