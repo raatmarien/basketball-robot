@@ -30,7 +30,9 @@ from ast import literal_eval
 
 # Constants
 CENTER_REGION = 0.03
-CENTER_BASKET_REGION = 0.02
+CENTER_BASKET_REGION = 0.035
+
+
 TIME_MOVING_FORWARD = 8
 TIME_THROWING = 2
 DISTANCE_TO_CENTER_BALL = 0.5
@@ -39,7 +41,8 @@ CAMERA_FOV = 29.0 # Trial and error (mostly error though)
 
 # Variable
 DEBUG = False
-SCORE_IN_BLUE = True # Change to False if we need to score in the
+SCORE_IN_BLUE = False
+ # Change to False if we need to score in the
                      # magenta basket
 
 
@@ -147,7 +150,7 @@ class BasketballLogic:
         if distance < DISTANCE_TO_CENTER_BALL:
             speed = 0
         else:
-            speed = 50 * abs(max(min(distance, 1.5), -1.5))
+            speed = 60 * abs(max(min(distance, 1.5), -1.5))
 
         self.send("movement:{}:{}:{}".format(speed, pos * CAMERA_FOV,
                                              rotational_speed))
@@ -179,8 +182,8 @@ class BasketballLogic:
             horizontal_basket_position = bx + (bw / 2.0) - 0.5
             log("Basket position is {}".format(horizontal_basket_position))
 
-        if horizontal_basket_position >= -CENTER_BASKET_REGION and \
-           horizontal_basket_position <= CENTER_BASKET_REGION and \
+        if horizontal_basket_position >= -CENTER_BASKET_REGION + 0.01  and \
+           horizontal_basket_position <= CENTER_BASKET_REGION - 0.01 and \
            pos < 0.01 and pos > -0.01:
             self.move_to_state(State.THROWING)
             self.react(position, baskets)
@@ -190,7 +193,7 @@ class BasketballLogic:
         sideways_speed = 16 * (max(-sideways_slowdown,
                                    min(sideways_slowdown,
                                        horizontal_basket_position)) \
-                               / sideways_slowdown)
+                               / sideways_slowdown) + 1
 
         turn_slowdown = 0.1
         turn_speed = 70 * (max(-turn_slowdown,
@@ -219,6 +222,8 @@ class BasketballLogic:
 
     def throw(self):
         self.send("forward")
+	rate = rospy.Rate(100)
+	rate.sleep()
         average_distance = sum(self.basket_distances) / len(self.basket_distances)
         speed = self.get_throw_speed(average_distance)
         self.send("throw:{}".format(int(round(speed))))
@@ -229,7 +234,7 @@ class BasketballLogic:
 	return speed-inertia_const
 
     def get_throw_speed(self, distance):
-	movement_constant = 80
+	movement_constant = -2
 	dist_const = 0
 
 	distance = (distance + dist_const)
@@ -242,32 +247,33 @@ class BasketballLogic:
         #           (2.44, 188),
         #           (2.61, 240),
         #           (3.42, 270)]
-	speeds = [(0.6,150.0),
-		    (0.8,150.0),
-		    (1.0,151.0),
-		    (1.2,151.0),
-		    (1.4,153.0),
-		    (1.6,155.0),
-		    (1.8,156.0),
-		    (2.0,158.0),
-		    (2.2,160.0),
-		    (2.4,161.0),
-		    (2.6,164.0),
-		    (2.8,168),
-		    (3.0,172),
-		    (3.2,178),
-		    (3.4,186),
-		    (3.6,195),
-		    (3.8,205),
-		    (4.0,216),
-		    (4.2,228)]
+	speeds = [(0.6,152),
+		    (0.8,152),
+		    (1.0,152),
+		    (1.2,152),
+		    (1.4,154),
+		    (1.6,160),
+		    (1.8,170),
+		    (2.0,179),
+		    (2.2,183),
+		    (2.4,185),
+		    (2.6,195),
+		    (2.8,207),
+		    (3.0,219),
+		    (3.2,233),
+		    (3.4,245),
+		    (3.6,260),
+		    (3.8,270),
+		    (4.0,270),
+		    (4.2,270)]
 
         for i in range(len(speeds)):
 	    if distance<= speeds[0][0]:
 	
 		return float(speeds[0][1])
 	    if distance < speeds[i][0]:
-		return float(speeds[i][1]-(speeds[i][0]-distance)*(speeds[i][1]-speeds[i-1][1])/0.2 - movement_constant)*1.65 + 25
+		#return float(speeds[i][1]-(speeds[i][0]-distance)*(speeds[i][1]-speeds[i-1][1])/0.2 - movement_constant)*1.65 + 25
+		return float(speeds[i][1]-(speeds[i][0]-distance)*(speeds[i][1]-speeds[i-1][1])/0.2 - movement_constant)
 		
 
 	#(min_dist, min_speed) = speeds[0]
