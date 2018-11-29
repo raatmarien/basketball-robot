@@ -29,10 +29,10 @@ import time
 from ast import literal_eval
 
 # Constants
-CENTER_REGION = 0.05
-CENTER_BASKET_REGION = 0.04
+CENTER_REGION = 0.03
+CENTER_BASKET_REGION = 0.02
 TIME_MOVING_FORWARD = 8
-TIME_THROWING = 1.5
+TIME_THROWING = 2
 DISTANCE_TO_CENTER_BALL = 0.5
 CAMERA_FOV = 29.0 # Trial and error (mostly error though)
 
@@ -193,9 +193,9 @@ class BasketballLogic:
                                / sideways_slowdown)
 
         turn_slowdown = 0.1
-        turn_speed = 64 * (max(-turn_slowdown,
+        turn_speed = 70 * (max(-turn_slowdown,
                                  min(turn_slowdown, pos)) \
-                             / turn_slowdown)
+                             / turn_slowdown)+1
 
         self.send("movement:{}:-90:{}".format(sideways_speed, turn_speed))
 
@@ -223,38 +223,69 @@ class BasketballLogic:
         speed = self.get_throw_speed(average_distance)
         self.send("throw:{}".format(int(round(speed))))
 
-    def get_throw_speed(self, distance):
+    def get_throw_speed_f(self, distance):
 	inertia_const = 30
 	speed = int(-2*math.pow(10,-18)*math.pow(distance,6)+1*math.pow(10,-14)*math.pow(distance,5)+2*math.pow(10,-11)*math.pow(distance,4)-2*math.pow(10,-7)*math.pow(distance,3)+0.0005*math.pow(distance,2)-0.4037*distance+279.09)
 	return speed-inertia_const
 
-    def get_throw_speed_h(self, distance):
-	movement_constant = 20
+    def get_throw_speed(self, distance):
+	movement_constant = 80
+	dist_const = 0
+
+	distance = (distance + dist_const)
+	print distance
         
 	#speeds = [(0.75, 160), (2.0, 165)]
-        speeds = [(0.76, 172),
-                   (1.157, 175),
-                   (1.52, 180),
-                   (2.44, 188),
-                   (2.61, 240),
-                   (3.42, 270)]
+        #speeds = [(0.76, 172),
+        #           (1.157, 175),
+        #           (1.52, 180),
+        #           (2.44, 188),
+        #           (2.61, 240),
+        #           (3.42, 270)]
+	speeds = [(0.6,150.0),
+		    (0.8,150.0),
+		    (1.0,151.0),
+		    (1.2,151.0),
+		    (1.4,153.0),
+		    (1.6,155.0),
+		    (1.8,156.0),
+		    (2.0,158.0),
+		    (2.2,160.0),
+		    (2.4,161.0),
+		    (2.6,164.0),
+		    (2.8,168),
+		    (3.0,172),
+		    (3.2,178),
+		    (3.4,186),
+		    (3.6,195),
+		    (3.8,205),
+		    (4.0,216),
+		    (4.2,228)]
 
-        (min_dist, min_speed) = speeds[0]
-        (sec_dist, sec_speed) = speeds[1]
-        (sm_dist, sm_speed) = speeds[len(speeds) - 2]
-        (max_dist, max_speed) = speeds[len(speeds) - 1]
-        if distance <= min_dist:
-            speed_per_dist = (sec_speed - min_speed) / (sec_dist - min_dist)
-            return min_speed - ((min_dist - distance) * speed_per_dist)-movement_constant
-        elif distance >= max_dist:
-            speed_per_dist = (max_speed - sm_speed) / (max_dist - sm_dist)
-            return max_speed + ((distance - max_dist) * speed_per_dist)-movement_constant
-        else:
-            (prev_dist, prev_speed) = speeds[0]
-            for (cur_dist, cur_speed) in speeds[1:]:
-                if distance < cur_dist:
-                    speed_per_dist = (cur_speed - prev_speed) / (cur_dist - prev_dist)
-                    return prev_speed + ((distance - prev_dist) * speed_per_dist)-movement_constant
+        for i in range(len(speeds)):
+	    if distance<= speeds[0][0]:
+	
+		return float(speeds[0][1])
+	    if distance < speeds[i][0]:
+		return float(speeds[i][1]-(speeds[i][0]-distance)*(speeds[i][1]-speeds[i-1][1])/0.2 - movement_constant)*1.65 + 25
+		
+
+	#(min_dist, min_speed) = speeds[0]
+        #(sec_dist, sec_speed) = speeds[1]
+        #(sm_dist, sm_speed) = speeds[len(speeds) - 2]
+        #(max_dist, max_speed) = speeds[len(speeds) - 1]
+        #if distance <= min_dist:
+        #    speed_per_dist = (sec_speed - min_speed) / (sec_dist - min_dist)
+        #    return min_speed - ((min_dist - distance) * speed_per_dist)-movement_constant
+        #elif distance >= max_dist:
+        #    speed_per_dist = (max_speed - sm_speed) / (max_dist - sm_dist)
+        #    return max_speed + ((distance - max_dist) * speed_per_dist)-movement_constant
+        #else:
+        #    (prev_dist, prev_speed) = speeds[0]
+        #    for (cur_dist, cur_speed) in speeds[1:]:
+        #        if distance < cur_dist:
+        #            speed_per_dist = (cur_speed - prev_speed) / (cur_dist - prev_dist)
+        #            return prev_speed + ((distance - prev_dist) * speed_per_dist)-movement_constant
 
 
 logic = BasketballLogic()

@@ -143,10 +143,6 @@ class ImageProcessor():
 
             self.balls_in_frame.append(rect)
 
-    #def mouse_callback( event, x, y, flags, params):
-     #   if event == 2:
-     #       points.append(hsv[y][x])
-
     # def print_mask(self, mask):
     #     coverage = [0]*64
     #     for y in range(480):
@@ -164,81 +160,11 @@ class ImageProcessor():
 
 
 if __name__ == "__main__":
-	def mouse_callback(event, x, y, flags, params):
-	    #print "did sth"
-            if event == cv2.EVENT_LBUTTONDOWN:
-                points.append(hsv[y][x])
-		print "got point"
+    print "start"
+    camera = ImageProcessor()
+    camera.run()
 
-	print "start"
-	camera = ImageProcessor()
-	camera.run()
-
-	cap = camera
-	hsv = None
-	points = list()
-
-	
-
-	cv2.namedWindow('image')
-	cv2.setMouseCallback('image', mouse_callback)
-
-	while True:
-
-	    frames = cap.pipeline.wait_for_frames()
-            aligned_frames = cap.align.process(frames)
-            color_frame = aligned_frames.get_color_frame()
-
-            color_image = np.asanyarray(color_frame.get_data())
-            hsv = cv2.cvtColor(color_image, cv2.COLOR_BGR2HSV)
-	   
-
-	    #blurred = cv2.GaussianBlur(frame, (5, 5), 0)
-	    #print "got frame"
-
-	    cv2.imshow('image', color_image)
-
-	    if len(points)>= 10:
-		print "enough"
-		break
-
-	    if cv2.waitKey(1) & 0xFF == ord('q'):
-		print "got frame"
-		break
-
-	#cap.release()
-	cv2.destroyAllWindows()
-	h = list()
-	s = list()
-	v = list()
-
-	for i in range(len(points)):
-	    h.append(points[i][0])
-	    s.append(points[i][1])
-	    v.append(points[i][2])
-
-	parameters = [min(h), min(s), min(v), max(h), max(s), max(v)]
-	name = ""
-
-	while name == "":
-	    objekt = input("Are those ball(1), blue basket(2) or magenta basket(3) parameters? ")
-	    if objekt == 1:
-		name = "ball.txt"
-	    elif objekt == 2:
-		name = "blue_basket.txt"
-	    elif objekt == 3:
-		name = "magneta_basket.txt"
-	    elif objekt == 4:
-		name = "field.txt"
-	    else:
-		print("Wrong input, try again")
-
-	fail = open(name, "w")
-	for i in parameters:
-	    fail.write(str(i) + ",")
-	fail.close()
-
-	old = '''while True:
+    while True:
         try:
             if select.select([sys.stdin,],[],[],0.0)[0]:
                 change = raw_input()
@@ -259,5 +185,5 @@ if __name__ == "__main__":
                     uv = num
         except:
             pass
-        camera.process_image() '''
+        camera.process_image()
 

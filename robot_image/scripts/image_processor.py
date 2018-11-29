@@ -33,18 +33,35 @@ FRAME_RATE = 30
 
 MIN_BALL_CONTOUR_AREA = 30
 MIN_BASKET_CONTOUR_AREA = 100
+MAX_BALL_CONTOUR_AREA = 2000
 DEBUG = False
 
 # Important reading about cv2 color spaces:
 # https://docs.opencv.org/3.4.2/df/d9d/tutorial_py_colorspaces.html
 # Hue goes from 0 to 179
-BALL_COLOR_LOWER_BOUND = np.array([30, 50, 50])
-BALL_COLOR_UPPER_BOUND = np.array([90, 130, 150])
 
-BLUE_BASKET_LOWER_BOUND = np.array([100, 110, 70])
-BLUE_BASKET_UPPER_BOUND = np.array([130, 250, 140])
-MAGENTA_BASKET_LOWER_BOUND = np.array([160, 150, 150])
-MAGENTA_BASKET_UPPER_BOUND = np.array([180, 180, 180])
+ball_fail = open("/home/robot/catkin_ws/src/robot_image/scripts/ball.txt",'r')
+ball_values = ball_fail.read().split(',')
+BALL_COLOR_LOWER_BOUND = np.array([int(ball_values[0]), int(ball_values[1]), int(ball_values[2])])
+BALL_COLOR_UPPER_BOUND = np.array([int(ball_values[3]), int(ball_values[4]), int(ball_values[5])])
+ball_fail.close()
+
+blue_fail = open("/home/robot/catkin_ws/src/robot_image/scripts/blue_basket.txt",'r')
+blue_values = blue_fail.read().split(',')
+BLUE_BASKET_LOWER_BOUND = np.array([int(blue_values[0]), int(blue_values[1]), int(blue_values[2])])
+BLUE_BASKET_UPPER_BOUND = np.array([int(blue_values[3]), int(blue_values[4]), int(blue_values[5])])
+blue_fail.close()
+
+mage_fail = open("/home/robot/catkin_ws/src/robot_image/scripts/magneta_basket.txt",'r')
+mage_values = mage_fail.read().split(',')
+MAGENTA_BASKET_LOWER_BOUND = np.array([int(mage_values[0]), int(mage_values[1]), int(mage_values[2])])
+MAGENTA_BASKET_UPPER_BOUND = np.array([int(mage_values[3]), int(mage_values[4]), int(mage_values[5])])
+mage_fail.close()
+
+#BLUE_BASKET_LOWER_BOUND = np.array([100, 110, 70])
+#BLUE_BASKET_UPPER_BOUND = np.array([130, 250, 140])
+#MAGENTA_BASKET_LOWER_BOUND = np.array([160, 150, 150])
+#MAGENTA_BASKET_UPPER_BOUND = np.array([180, 180, 180])
 
 def debug_log(text):
     if DEBUG:
@@ -147,7 +164,13 @@ class ImageProcessor():
             if contour_size < MIN_BALL_CONTOUR_AREA:
                 continue
 
+	    #if contour_size > MAX_BALL_CONTOUR_AREA:
+            #    continue
+
             rect = cv2.boundingRect(contour)
+
+	    if rect[1] < 100:
+	    	continue
 
             distance = self.get_corrected_mean_distance(contour, depth)
 
@@ -210,6 +233,8 @@ class ImageProcessor():
             max_ball = ()
             max_ball_distance = 0
             for ((x, y, width, height), distance) in self.balls_in_frame:
+		#if y < 100:
+	    	#    continue
                 if (width * height) > max_size:
                     max_size = width * height
                     max_ball = (x, y, width, height)
@@ -221,7 +246,27 @@ class ImageProcessor():
         else:
             return "None"
 
+    def get_closest_ball(self):
+	debug_log(str(len(self.balls_in_frame)) + " balls found")
+
+        # Only send the y location of the biggest ball for
+        # now
+        if len(self.balls_in_frame) > 0:
+	    closest_y = 0
+            closest_ball = ()
+	    closest_ball_distance = 0
+	    for ((x, y, width, height), distance) in self.balls_in_frame:
+                if y > closest_y:
+                    closest_y = y
+                    closest_ball = (x, y, width, height)
+                    closest_ball_distance = distance
+            (x, y, width, height) = closest_ball
+            ball_pos = str(((x + (width / 2)) / float(WIDTH)) - 0.5)
+            debug_log("Ball at " + ball_pos)
+            return ball_pos + ":" + str(closest_ball_distance)
+
     def send_objects(self):
+	#ball = self.get_closest_ball()
         ball = self.get_largest_ball()
         baskets = "{}:{}".format(self.blue_basket, self.magenta_basket)
         message = "{}\n{}".format(ball, baskets)
