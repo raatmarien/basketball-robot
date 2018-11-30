@@ -141,7 +141,7 @@ class Driver:
     def movement_listener(self):
         rospy.Subscriber("movement", String, self.movement_callback)
         self.mainboard_out = rospy.Publisher("mainboard", String, queue_size=10)
-        rate = rospy.Rate(2)
+        rate = rospy.Rate(10)
 
         while not rospy.is_shutdown():
             self.main_board.set_throw(self.throw_speed)

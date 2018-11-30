@@ -180,10 +180,17 @@ if __name__ == "__main__":
 
 	
 
-	cv2.namedWindow('image')
-	cv2.setMouseCallback('image', mouse_callback)
+	#cv2.namedWindow('image')
+	#cv2.namedWindow('tresh')
+	#cv2.setMouseCallback('image', mouse_callback)
 
 	while True:
+	    points = list()
+
+	    cv2.namedWindow('image')
+	    cv2.namedWindow('tresh')
+	    cv2.setMouseCallback('image', mouse_callback)
+
 	    while True:
 
 		frames = cap.pipeline.wait_for_frames()
@@ -208,7 +215,7 @@ if __name__ == "__main__":
 		    break
 
 	    #cap.release()
-	    cv2.destroyAllWindows()
+	    cv2.destroyWindow('image')
 	    h = list()
 	    s = list()
 	    v = list()
@@ -225,10 +232,10 @@ if __name__ == "__main__":
             UPPER_BOUND = np.array([max(h)+5, max(s)+5, max(v)+5])
 
 	    mask = cv2.inRange(hsv, LOWER_BOUND, UPPER_BOUND)
-	    cv2.imshow('2', mask)
+	    cv2.imshow('tresh', mask)
 
 	    while name == "":
-		objekt = input("Are those ball(1), blue basket(2) or magenta basket(3)parameters?")
+		objekt = input("Are those ball(1), blue basket(2) or magenta baske (3)parameters?")
 		if objekt == 1:
 		    name = "ball.txt"
 		elif objekt == 2:

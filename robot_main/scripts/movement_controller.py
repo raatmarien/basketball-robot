@@ -34,7 +34,7 @@ def movement_controller():
 
         translation_dict = { "w": "forward", "s": "backward", "a":
                              "left", "d": "right", "g": "get_speeds",
-                             "r": "toggle_red_led", "P": "stop", "l":
+                             "r": "toggle_red_led", "o": "stop", "l":
                              "turn_left", "t": "throw:2000", "z":
                              "turn_left", "x": "turn_right", "y": "servo:2300", 
 			     "u": "servo:1800", "i": "servo:0"}

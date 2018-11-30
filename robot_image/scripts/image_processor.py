@@ -34,7 +34,7 @@ FRAME_RATE = 30
 MIN_BALL_CONTOUR_AREA = 30
 MIN_BASKET_CONTOUR_AREA = 100
 MAX_BALL_CONTOUR_AREA = 2000
-DEBUG = True
+DEBUG = False
 
 # Important reading about cv2 color spaces:
 # https://docs.opencv.org/3.4.2/df/d9d/tutorial_py_colorspaces.html
@@ -293,7 +293,7 @@ if __name__ == "__main__":
         rospy.init_node("image_processor")
         camera = ImageProcessor()
         camera.run()
-        rate = rospy.Rate(5)
+        rate = rospy.Rate(10)
 
         while not rospy.is_shutdown():
             camera.process_image()

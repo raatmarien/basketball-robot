@@ -41,7 +41,7 @@ CAMERA_FOV = 29.0 # Trial and error (mostly error though)
 
 # Variable
 DEBUG = False
-SCORE_IN_BLUE = False
+SCORE_IN_BLUE = True
 
  # Change to False if we need to score in the
                      # magenta basket
@@ -183,11 +183,12 @@ class BasketballLogic:
             horizontal_basket_position = bx + (bw / 2.0) - 0.5
             log("Basket position is {}".format(horizontal_basket_position))
 
-        if horizontal_basket_position >= -CENTER_BASKET_REGION + 0.01  and \
-           horizontal_basket_position <= CENTER_BASKET_REGION - 0.01 and \
+        if horizontal_basket_position >= -CENTER_BASKET_REGION + 0  and \
+           horizontal_basket_position <= CENTER_BASKET_REGION - 0 and \
            pos < 0.01 and pos > -0.01:
-            self.move_to_state(State.THROWING)
+	    self.move_to_state(State.THROWING)
             self.react(position, baskets)
+	    self.send("movement:0:0:0")
             return
 
         sideways_slowdown = 0.2
@@ -197,7 +198,7 @@ class BasketballLogic:
                                / sideways_slowdown) + 1
 
         turn_slowdown = 0.1
-        turn_speed = 70 * (max(-turn_slowdown,
+        turn_speed = 64 * (max(-turn_slowdown,
                                  min(turn_slowdown, pos)) \
                              / turn_slowdown)+1
 
@@ -223,8 +224,8 @@ class BasketballLogic:
 
     def throw(self):
         self.send("forward")
-	rate = rospy.Rate(100)
-	rate.sleep()
+	#rate = rospy.Rate(100)
+	#rate.sleep()
         average_distance = sum(self.basket_distances) / len(self.basket_distances)
         speed = self.get_throw_speed(average_distance)
         self.send("throw:{}".format(int(round(speed))))
