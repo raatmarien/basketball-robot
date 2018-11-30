@@ -228,7 +228,7 @@ if __name__ == "__main__":
 	    cv2.imshow('2', mask)
 
 	    while name == "":
-		objekt = input("Are those ball(1), blue basket(2) or magenta basket(3) parameters? ")
+		objekt = input("Are those ball(1), blue basket(2) or magenta basket(3)parameters?")
 		if objekt == 1:
 		    name = "ball.txt"
 		elif objekt == 2:
@@ -245,9 +245,11 @@ if __name__ == "__main__":
 	        fail.write(str(i) + ",")
 	    fail.close()
 
-	    uuesti = input("Would you like to do a new calibration?(y/n ")
-	    if uuesti == 'n':
+	    uuesti = input("Would you like to do a new calibration?(1/0) ")
+	    if uuesti == 0:
 		break
+	    else:
+		continue
 	
 	    cv2.destroyAllWindows()
 

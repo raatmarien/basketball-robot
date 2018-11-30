@@ -34,7 +34,7 @@ FRAME_RATE = 30
 MIN_BALL_CONTOUR_AREA = 30
 MIN_BASKET_CONTOUR_AREA = 100
 MAX_BALL_CONTOUR_AREA = 2000
-DEBUG = False
+DEBUG = True
 
 # Important reading about cv2 color spaces:
 # https://docs.opencv.org/3.4.2/df/d9d/tutorial_py_colorspaces.html

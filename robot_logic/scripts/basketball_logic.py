@@ -30,7 +30,7 @@ from ast import literal_eval
 
 # Constants
 CENTER_REGION = 0.03
-CENTER_BASKET_REGION = 0.035
+CENTER_BASKET_REGION = 0.03
 
 
 TIME_MOVING_FORWARD = 8
@@ -42,6 +42,7 @@ CAMERA_FOV = 29.0 # Trial and error (mostly error though)
 # Variable
 DEBUG = False
 SCORE_IN_BLUE = False
+
  # Change to False if we need to score in the
                      # magenta basket
 
@@ -247,13 +248,13 @@ class BasketballLogic:
         #           (2.44, 188),
         #           (2.61, 240),
         #           (3.42, 270)]
-	speeds = [(0.6,152),
-		    (0.8,152),
-		    (1.0,152),
-		    (1.2,152),
+	speeds = [(0.6,145),
+		    (0.8,145),
+		    (1.0,150),
+		    (1.2,150),
 		    (1.4,154),
 		    (1.6,160),
-		    (1.8,170),
+		    (1.8,165),
 		    (2.0,179),
 		    (2.2,183),
 		    (2.4,185),
