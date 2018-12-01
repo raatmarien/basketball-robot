@@ -22,6 +22,13 @@
 import rospy
 from std_msgs.msg import String
 
+def new_object_callback(message):
+    try:
+	rospy.loginfo("distance: "+message.data.split("\n")[1].split(":")[0].split(",")[4])
+    except:
+	rospy.loginfo("distance: None found")
+
+
 def movement_controller():
     pub = rospy.Publisher("movement", String, queue_size=10)
     referee_pub = rospy.Publisher("robot_main/referee", String, queue_size=10)
@@ -58,7 +65,9 @@ def movement_controller():
         rate.sleep()
 
 if __name__ == "__main__":
+    rospy.Subscriber("image_processing/objects", String, new_object_callback)
     try:
         movement_controller()
     except rospy.ROSInterruptException:
         pass
+    rospy.spin()

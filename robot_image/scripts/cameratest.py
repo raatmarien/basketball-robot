@@ -225,11 +225,11 @@ if __name__ == "__main__":
 		s.append(points[i][1])
 		v.append(points[i][2])
 
-	    parameters = [min(h)-5, min(s)-5, min(v)-5, max(h)+5, max(s)+5, max(v)+5]
+	    parameters = [min(h)-10, min(s)-10, min(v)-10, max(h)+10, max(s)+10, max(v)+10]
 	    name = ""
 
-	    LOWER_BOUND = np.array([min(h)-5, min(s)-5, min(v)-5])
-            UPPER_BOUND = np.array([max(h)+5, max(s)+5, max(v)+5])
+	    LOWER_BOUND = np.array([min(h)-10, min(s)-10, min(v)-10])
+            UPPER_BOUND = np.array([max(h)+10, max(s)+10, max(v)+10])
 
 	    mask = cv2.inRange(hsv, LOWER_BOUND, UPPER_BOUND)
 	    cv2.imshow('tresh', mask)

@@ -29,8 +29,8 @@ import time
 from ast import literal_eval
 
 # Constants
-CENTER_REGION = 0.03
-CENTER_BASKET_REGION = 0.03
+CENTER_REGION = 0.02
+CENTER_BASKET_REGION = 0.02
 
 
 TIME_MOVING_FORWARD = 8
@@ -204,6 +204,8 @@ class BasketballLogic:
 
         self.send("movement:{}:-90:{}".format(sideways_speed, turn_speed))
 
+        self.throw(distance)
+
     def react_throwing(self, position, baskets):
         log("In state throwing")
         if (time.time() - self.throwing_start_time) > TIME_THROWING:
@@ -212,7 +214,13 @@ class BasketballLogic:
             self.react(position, baskets)
             return
 
-        self.throw()
+        if position != "None":
+            distance = float(position.split(":")[1])
+        else:
+            distance = 0.1
+
+        self.send("forward")
+        self.throw(distance)
 
     def move_to_state(self, state):
         log("Moving to state {}".format(state))
@@ -222,12 +230,12 @@ class BasketballLogic:
             self.throwing_start_time = time.time()
         self.state = state
 
-    def throw(self):
-        self.send("forward")
-	#rate = rospy.Rate(100)
-	#rate.sleep()
+    def throw(self, ball_distance):
+	rate = rospy.Rate(100)
+	rate.sleep()
+        rospy.loginfo(str(self.basket_distances))
         average_distance = sum(self.basket_distances) / len(self.basket_distances)
-        speed = self.get_throw_speed(average_distance)
+        speed = self.get_throw_speed(average_distance - ball_distance)
         self.send("throw:{}".format(int(round(speed))))
 
     def get_throw_speed_f(self, distance):
@@ -236,64 +244,88 @@ class BasketballLogic:
 	return speed-inertia_const
 
     def get_throw_speed(self, distance):
-	movement_constant = -2
-	dist_const = 0
+	movement_constant = 4
+	dist_const = 0.05
+        
 
 	distance = (distance + dist_const)
 	print distance
         
 	#speeds = [(0.75, 160), (2.0, 165)]
-        #speeds = [(0.76, 172),
+        # speeds = [(0.76, 172),
         #           (1.157, 175),
         #           (1.52, 180),
         #           (2.44, 188),
         #           (2.61, 240),
         #           (3.42, 270)]
-	speeds = [(0.6,145),
-		    (0.8,145),
-		    (1.0,150),
-		    (1.2,150),
-		    (1.4,154),
-		    (1.6,160),
-		    (1.8,165),
-		    (2.0,179),
-		    (2.2,183),
-		    (2.4,185),
-		    (2.6,195),
-		    (2.8,207),
-		    (3.0,219),
-		    (3.2,233),
-		    (3.4,245),
-		    (3.6,260),
-		    (3.8,270),
-		    (4.0,270),
-		    (4.2,270)]
+	# speeds = [(0.6,1130),
+	# 	    (0.8,1140),
+	# 	    (1.0,1160),
+	# 	    (1.2,1170),
+	# 	    (1.4,1193),
+	# 	    (1.6,1233),
+	# 	    (1.8,1267),
+	# 	    (2.0,1360),
+	# 	    (2.2,1387),
+	# 	    (2.4,1400),
+	# 	    (2.6,1467),
+	# 	    (2.8,1547),
+	# 	    (3.0,1627),
+	# 	    (3.2,1720),
+	# 	    (3.4,1800),
+	# 	    (3.6,1900),
+	# 	    (3.8,1967),
+	# 	    (4.0,2000),
+	# 	    (4.2,2000)]
+        # speeds = [(0.75, 1390),
+        #           (1.03, 1420),
+        #           (1.19, 1460),
+        #           (1.5, 1500),
+        #           (2.0, 1550),
+        #           (2.45, 1615),
+        #           (3.0, 1940),
+        #           (3.4, 2150)]
+        # speeds = [(0.70, 175),
+        #           (0.91, 180),
+        #           (1.10, 182),
+        #           (1.46, 187),
+        #           (1.69, 190),
+        #           (2.37, 200),
+        #           (2.65, 230)]
 
-        for i in range(len(speeds)):
-	    if distance<= speeds[0][0]:
+        speeds = [(2.36, 197),
+                  (1.42, 189),
+                  (1.18, 182)][::-1]
+
+        # return 182
+
+        # for i in range(len(speeds)):
+	#     if distance<= speeds[0][0]:
 	
-		return float(speeds[0][1])
-	    if distance < speeds[i][0]:
-		#return float(speeds[i][1]-(speeds[i][0]-distance)*(speeds[i][1]-speeds[i-1][1])/0.2 - movement_constant)*1.65 + 25
-		return float(speeds[i][1]-(speeds[i][0]-distance)*(speeds[i][1]-speeds[i-1][1])/0.2 - movement_constant)
+	# 	return float(speeds[0][1])
+	#     if distance < speeds[i][0]:
+	# 	#return float(speeds[i][1]-(speeds[i][0]-distance)*(speeds[i][1]-speeds[i-1][1])/0.2 - movement_constant)*1.65 + 25
+	# 	return float(speeds[i][1]-(speeds[i][0]-distance)*(speeds[i][1]-speeds[i-1][1])/0.2 - movement_constant)
+	# return 2000
 		
 
-	#(min_dist, min_speed) = speeds[0]
-        #(sec_dist, sec_speed) = speeds[1]
-        #(sm_dist, sm_speed) = speeds[len(speeds) - 2]
-        #(max_dist, max_speed) = speeds[len(speeds) - 1]
-        #if distance <= min_dist:
-        #    speed_per_dist = (sec_speed - min_speed) / (sec_dist - min_dist)
-        #    return min_speed - ((min_dist - distance) * speed_per_dist)-movement_constant
-        #elif distance >= max_dist:
-        #    speed_per_dist = (max_speed - sm_speed) / (max_dist - sm_dist)
-        #    return max_speed + ((distance - max_dist) * speed_per_dist)-movement_constant
-        #else:
-        #    (prev_dist, prev_speed) = speeds[0]
-        #    for (cur_dist, cur_speed) in speeds[1:]:
-        #        if distance < cur_dist:
-        #            speed_per_dist = (cur_speed - prev_speed) / (cur_dist - prev_dist)
-        #            return prev_speed + ((distance - prev_dist) * speed_per_dist)-movement_constant
+	(min_dist, min_speed) = speeds[0]
+        (sec_dist, sec_speed) = speeds[1]
+        (sm_dist, sm_speed) = speeds[len(speeds) - 2]
+        (max_dist, max_speed) = speeds[len(speeds) - 1]
+        if distance <= min_dist:
+           speed_per_dist = (sec_speed - min_speed) / (sec_dist - min_dist)
+           return min_speed - ((min_dist - distance) * speed_per_dist)-movement_constant
+        elif distance >= max_dist:
+            return 230
+           # speed_per_dist = (max_speed - sm_speed) / (max_dist - sm_dist)
+           # return max_speed + ((distance - max_dist) * speed_per_dist)-movement_constant
+        else:
+           (prev_dist, prev_speed) = speeds[0]
+           for (cur_dist, cur_speed) in speeds[1:]:
+               if distance < cur_dist:
+                   speed_per_dist = (cur_speed - prev_speed) / (cur_dist - prev_dist)
+                   return prev_speed + ((distance - prev_dist) * speed_per_dist)-movement_constant
 
 
 logic = BasketballLogic()

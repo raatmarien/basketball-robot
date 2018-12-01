@@ -2,4 +2,5 @@
   <node pkg="robot_main" type="movement_controller.py"
         name="movement_controller" output="screen" />
   <include file="$(find robot_hardware)/launch/robot_hardware.launch" />
+  <include file="$(find robot_image)/launch/robot_image.launch" />
 </launch>

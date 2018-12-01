@@ -293,7 +293,7 @@ if __name__ == "__main__":
         rospy.init_node("image_processor")
         camera = ImageProcessor()
         camera.run()
-        rate = rospy.Rate(10)
+        rate = rospy.Rate(30)
 
         while not rospy.is_shutdown():
             camera.process_image()
