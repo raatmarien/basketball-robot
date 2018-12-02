@@ -37,8 +37,12 @@ def mainboard_callback(message):
         if command == "a" + fieldID + "XSTART----" or command == "a" + fieldID + robotID + "START----":
             rospy.loginfo("Sending start command")
             referee_pub.publish("start")
+            if command[2] == robotID:
+                movement_pub.publish("ping:{}:{}".format(robotID, fieldID))
         elif command == "a" + fieldID + "XSTOP-----" or command == "a" + fieldID + robotID + "STOP-----":
             referee_pub.publish("stop")
+            if command[2] == robotID:
+                movement_pub.publish("ping:{}:{}".format(robotID, fieldID))
         elif command ==  'a' + fieldID + robotID + 'PING-----':
             movement_pub.publish("ping:{}:{}".format(robotID, fieldID))
 

@@ -190,7 +190,7 @@ class BasketballLogic:
         else:
             (basket, distance) = basket_msg
             (bx, by, bw, bh) = basket
-            basket_adjustment = -0.04
+            basket_adjustment = -0.03
             horizontal_basket_position = bx + (bw / 2.0) - 0.5 + basket_adjustment
             log("Basket position is {}".format(horizontal_basket_position))
 
