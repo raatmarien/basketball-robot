@@ -131,9 +131,9 @@ class BasketballLogic:
             return
 
         if self.turn_left:
-            self.send("movement:0:0:-80")
+            self.send("movement:0:0:-150")
         else:
-            self.send("movement:0:0:80")
+            self.send("movement:0:0:150")
 
     def react_moving_and_turning(self, position, baskets):
         log("In state moving and turning")
