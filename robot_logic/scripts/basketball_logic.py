@@ -36,6 +36,8 @@ CENTER_BALL_REGION = 0.01
 
 TIME_THROWING = 2
 TIME_BACKING_UP = 0.3
+TIME_SEARCHING = 1.5
+TIME_TURNING = 10
 DISTANCE_TO_CENTER_BALL = 0.5
 CAMERA_FOV = 29.0 # Trial and error (mostly error though)
 
@@ -50,7 +52,7 @@ SCORE_IN_BLUE = True
 
 class State:
     STOPPED, FORWARD, TURNING, MOVING_AND_TURNING, \
-        CENTERING, THROWING, BACKING_UP = range(7)
+        CENTERING, THROWING, BACKING_UP, SEARCHING = range(8)
 
 
 def log(text):
@@ -90,6 +92,8 @@ class BasketballLogic:
             self.react_throwing(position, baskets)
         elif self.state == State.BACKING_UP:
             self.react_backing_up(position, baskets)
+        elif self.state == State.SEARCHING:
+            self.react_searching(position, baskets)
 
     def update_basket_info(self, baskets):
         if SCORE_IN_BLUE:
@@ -131,6 +135,11 @@ class BasketballLogic:
         log("In state turning")
         if position != "None":
             self.move_to_state(State.MOVING_AND_TURNING)
+            self.react(position, baskets)
+            return
+
+        if (time.time() - self.turning_start_time) > TIME_TURNING:
+            self.move_to_state(State.SEARCHING)
             self.react(position, baskets)
             return
 
@@ -262,6 +271,20 @@ class BasketballLogic:
 
         self.send("backward")
 
+    def react_searching(self, position, baskets):
+        log("In state searching")
+        if (time.time() - self.searching_start_time) > TIME_SEARCHING:
+            self.move_to_state(State.TURNING)
+            self.react(position, baskets)
+            return
+
+        if position != "None":
+            self.move_to_state(State.MOVING_AND_TURNING)
+            self.react(position, baskets)
+            return
+
+        self.send("backward")
+
     def move_to_state(self, state):
         log("Moving to state {}".format(state))
         if state == State.FORWARD:
@@ -270,6 +293,11 @@ class BasketballLogic:
             self.throwing_start_time = time.time()
         elif state == State.BACKING_UP:
             self.backing_up_start_time = time.time()
+        elif state == State.SEARCHING:
+            self.searching_start_time = time.time()
+        elif state == State.TURNING:
+            self.turning_start_time = time.time()
+            
         self.state = state
         rate = rospy.Rate(50)
         rate.sleep()
