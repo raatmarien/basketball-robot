@@ -197,6 +197,7 @@ class BasketballLogic:
         if horizontal_basket_position >= -CENTER_BASKET_REGION  and \
            horizontal_basket_position <= CENTER_BASKET_REGION and \
            pos < CENTER_BALL_REGION and pos > -CENTER_BALL_REGION:
+            self.send("movement:0:0:0")
 	    self.move_to_state(State.THROWING)
             self.react(position, baskets)
             return
@@ -337,10 +338,12 @@ class BasketballLogic:
                   (2.012, 198),
                   (2.098, 199),
                   (2.263, 202),
-                  (2.43, 204),
+                  (2.33, 206),
+                  (2.43, 211),
                   (2.62, 241),
                   (2.71, 243),
-                  (3.29, 270)]
+                  (3.33, 260),
+                  (3.6, 270)]
 
         # return 
 
