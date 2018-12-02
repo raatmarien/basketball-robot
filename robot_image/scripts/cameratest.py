@@ -206,7 +206,7 @@ if __name__ == "__main__":
 
 		cv2.imshow('image', color_image)
 
-		if len(points)>= 10:
+		if len(points)>= 20:
 		    print "enough"
 		    break
 

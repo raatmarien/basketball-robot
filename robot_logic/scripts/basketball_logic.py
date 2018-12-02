@@ -30,7 +30,8 @@ from ast import literal_eval
 
 # Constants
 CENTER_REGION = 0.02
-CENTER_BASKET_REGION = 0.02
+CENTER_BASKET_REGION = 0.01
+CENTER_BALL_REGION = 0.01
 
 
 TIME_MOVING_FORWARD = 8
@@ -41,7 +42,7 @@ CAMERA_FOV = 29.0 # Trial and error (mostly error though)
 
 # Variable
 DEBUG = False
-SCORE_IN_BLUE = True
+SCORE_IN_BLUE = False
 
  # Change to False if we need to score in the
                      # magenta basket
@@ -70,8 +71,8 @@ class BasketballLogic:
         self.movement_publisher.publish(command)
 
     def react(self, position, baskets):
-        log("Reacting in state {}".format(self.state))
-
+        rospy.loginfo("Reacting in state {}".format(self.state))
+        
         self.update_basket_info(baskets)
         
         if self.state == State.STOPPED:
@@ -97,10 +98,13 @@ class BasketballLogic:
             (basket, distance) = basket_msg
             (bx, by, bw, bh) = basket
             horizontal_basket_position = bx + (bw / 2.0) - 0.5
-            self.basket_distances.append(distance)
             if len(self.basket_distances) > 5:
                 self.basket_distances = self.basket_distances[1:]
             self.basket_last_seen_left = horizontal_basket_position < 0
+            if distance <= 0.001:
+                return
+            self.basket_distances.append(distance)
+            rospy.loginfo("Distance is: {}".format(sum(self.basket_distances) / len(self.basket_distances)))
             
     def react_stopped(self, position, baskets):
         self.send("stop")
@@ -164,6 +168,12 @@ class BasketballLogic:
             return
 
         pos = float(position.split(":")[0])
+        ball_distance = float(position.split(":")[1])
+
+        if ball_distance > DISTANCE_TO_CENTER_BALL:
+            self.move_to_state(State.MOVING_AND_TURNING)
+            self.react(position, baskets)
+            return
 
         if SCORE_IN_BLUE:
             basket_message = baskets.split(":")[0]
@@ -180,31 +190,42 @@ class BasketballLogic:
         else:
             (basket, distance) = basket_msg
             (bx, by, bw, bh) = basket
-            horizontal_basket_position = bx + (bw / 2.0) - 0.5
+            basket_adjustment = -0.08
+            horizontal_basket_position = bx + (bw / 2.0) - 0.5 + basket_adjustment
             log("Basket position is {}".format(horizontal_basket_position))
 
-        if horizontal_basket_position >= -CENTER_BASKET_REGION + 0  and \
-           horizontal_basket_position <= CENTER_BASKET_REGION - 0 and \
-           pos < 0.01 and pos > -0.01:
+        if horizontal_basket_position >= -CENTER_BASKET_REGION  and \
+           horizontal_basket_position <= CENTER_BASKET_REGION and \
+           pos < CENTER_BALL_REGION and pos > -CENTER_BALL_REGION:
 	    self.move_to_state(State.THROWING)
             self.react(position, baskets)
-	    self.send("movement:0:0:0")
             return
 
-        sideways_slowdown = 0.2
-        sideways_speed = 16 * (max(-sideways_slowdown,
+        sideways_slowdown = 0.3
+        sideways_speed = 24 * (max(-sideways_slowdown,
                                    min(sideways_slowdown,
                                        horizontal_basket_position)) \
-                               / sideways_slowdown) + 1
+                               / sideways_slowdown)
+        if sideways_speed > 0:
+            sideways_speed += 1
+        else:
+            sideways_speed -= 1
 
         turn_slowdown = 0.1
-        turn_speed = 64 * (max(-turn_slowdown,
+        turn_speed = 96 * (max(-turn_slowdown,
                                  min(turn_slowdown, pos)) \
-                             / turn_slowdown)+1
+                             / turn_slowdown)
+
+        if turn_speed > 0:
+            turn_speed += 1
+        else:
+            turn_speed -= 1
+
+        rospy.loginfo("Sideways {}\t Turn {}".format(sideways_speed, turn_speed))
 
         self.send("movement:{}:-90:{}".format(sideways_speed, turn_speed))
 
-        self.throw(distance)
+        self.throw(ball_distance)
 
     def react_throwing(self, position, baskets):
         log("In state throwing")
@@ -217,7 +238,7 @@ class BasketballLogic:
         if position != "None":
             distance = float(position.split(":")[1])
         else:
-            distance = 0.1
+            distance = 0.0
 
         self.send("forward")
         self.throw(distance)
@@ -229,13 +250,15 @@ class BasketballLogic:
         elif state == State.THROWING:
             self.throwing_start_time = time.time()
         self.state = state
+        rate = rospy.Rate(50)
+        rate.sleep()
 
     def throw(self, ball_distance):
-	rate = rospy.Rate(100)
+	rate = rospy.Rate(30)
 	rate.sleep()
         rospy.loginfo(str(self.basket_distances))
         average_distance = sum(self.basket_distances) / len(self.basket_distances)
-        speed = self.get_throw_speed(average_distance - ball_distance)
+        speed = self.get_throw_speed(average_distance)
         self.send("throw:{}".format(int(round(speed))))
 
     def get_throw_speed_f(self, distance):
@@ -244,13 +267,11 @@ class BasketballLogic:
 	return speed-inertia_const
 
     def get_throw_speed(self, distance):
-	movement_constant = 4
-	dist_const = 0.05
-        
+	movement_constant = 0
+	dist_const = -0.15
 
-	distance = (distance + dist_const)
-	print distance
-        
+        distance += dist_const
+
 	#speeds = [(0.75, 160), (2.0, 165)]
         # speeds = [(0.76, 172),
         #           (1.157, 175),
@@ -292,12 +313,36 @@ class BasketballLogic:
         #           (1.69, 190),
         #           (2.37, 200),
         #           (2.65, 230)]
+        # speeds = [(2.36, 197),
+        #           (1.42, 189),
+        #           (1.18, 182)][::-1]
 
-        speeds = [(2.36, 197),
-                  (1.42, 189),
-                  (1.18, 182)][::-1]
+        # speeds = [(0.68, 177),
+        #           (1.0, 181),
+        #           (1.35, 187),
+        #           (1.87, 196),
+        #           (2.2, 213)]
 
-        # return 182
+        speeds = [(0.604, 175),
+                  (0.76, 178),
+                  (0.869, 180),
+                  (0.978, 182),
+                  (1.088, 184),
+                  (1.193, 186),
+                  (1.328, 188),
+                  (1.422, 189),
+                  (1.538, 191),
+                  (1.675, 193),
+                  (1.828, 195),
+                  (2.012, 198),
+                  (2.098, 199),
+                  (2.263, 202),
+                  (2.43, 204),
+                  (2.62, 241),
+                  (2.71, 243)]
+
+        
+        # return 
 
         # for i in range(len(speeds)):
 	#     if distance<= speeds[0][0]:
@@ -328,6 +373,7 @@ class BasketballLogic:
                    return prev_speed + ((distance - prev_dist) * speed_per_dist)-movement_constant
 
 
+rospy.init_node("basketball_logic")
 logic = BasketballLogic()
 
 def new_object_callback(message):
@@ -343,7 +389,6 @@ def new_referee_command_callback(message):
 
 
 if __name__ == "__main__":
-    rospy.init_node("basketball_logic")
     rospy.Subscriber("image_processing/objects", String, new_object_callback)
     rospy.Subscriber("robot_main/referee", String, new_referee_command_callback)
 

@@ -32,7 +32,7 @@ HEIGHT = 720
 FRAME_RATE = 30
 
 MIN_BALL_CONTOUR_AREA = 30
-MIN_BASKET_CONTOUR_AREA = 100
+MIN_BASKET_CONTOUR_AREA = 200
 MAX_BALL_CONTOUR_AREA = 2000
 DEBUG = False
 
@@ -240,30 +240,31 @@ class ImageProcessor():
                     max_ball = (x, y, width, height)
                     max_ball_distance = distance
             (x, y, width, height) = max_ball
-            ball_pos = str(((x + (width / 2)) / float(WIDTH)) - 0.5)
+            ball_adjustment = -0.04
+            ball_pos = str(((x + (width / 2)) / float(WIDTH)) - 0.5 + ball_adjustment)
             debug_log("Ball at " + ball_pos)
             return ball_pos + ":" + str(max_ball_distance)
         else:
             return "None"
 
-    def get_closest_ball(self):
-	debug_log(str(len(self.balls_in_frame)) + " balls found")
+    # def get_closest_ball(self):
+    #     debug_log(str(len(self.balls_in_frame)) + " balls found")
 
-        # Only send the y location of the biggest ball for
-        # now
-        if len(self.balls_in_frame) > 0:
-	    closest_y = 0
-            closest_ball = ()
-	    closest_ball_distance = 0
-	    for ((x, y, width, height), distance) in self.balls_in_frame:
-                if y > closest_y:
-                    closest_y = y
-                    closest_ball = (x, y, width, height)
-                    closest_ball_distance = distance
-            (x, y, width, height) = closest_ball
-            ball_pos = str(((x + (width / 2)) / float(WIDTH)) - 0.5)
-            debug_log("Ball at " + ball_pos)
-            return ball_pos + ":" + str(closest_ball_distance)
+    #     # Only send the y location of the biggest ball for
+    #     # now
+    #     if len(self.balls_in_frame) > 0:
+    #         closest_y = 0
+    #         closest_ball = ()
+    #         closest_ball_distance = 0
+    #         for ((x, y, width, height), distance) in self.balls_in_frame:
+    #             if y > closest_y:
+    #                 closest_y = y
+    #                 closest_ball = (x, y, width, height)
+    #                 closest_ball_distance = distance
+    #         (x, y, width, height) = closest_ball
+    #         ball_pos = str(((x + (width / 2)) / float(WIDTH)) - 0.5)
+    #         debug_log("Ball at " + ball_pos)
+    #         return ball_pos + ":" + str(closest_ball_distance)
 
     def send_objects(self):
 	#ball = self.get_closest_ball()
@@ -293,7 +294,7 @@ if __name__ == "__main__":
         rospy.init_node("image_processor")
         camera = ImageProcessor()
         camera.run()
-        rate = rospy.Rate(30)
+        rate = rospy.Rate(20)
 
         while not rospy.is_shutdown():
             camera.process_image()
