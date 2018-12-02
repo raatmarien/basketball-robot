@@ -202,8 +202,8 @@ class BasketballLogic:
             self.react(position, baskets)
             return
 
-        sideways_slowdown = 0.3
-        sideways_speed = 24 * (max(-sideways_slowdown,
+        sideways_slowdown = 0.45
+        sideways_speed = 36 * (max(-sideways_slowdown,
                                    min(sideways_slowdown,
                                        horizontal_basket_position)) \
                                / sideways_slowdown)
@@ -212,8 +212,8 @@ class BasketballLogic:
         else:
             sideways_speed -= 1
 
-        turn_slowdown = 0.1
-        turn_speed = 96 * (max(-turn_slowdown,
+        turn_slowdown = 0.15
+        turn_speed = 144 * (max(-turn_slowdown,
                                  min(turn_slowdown, pos)) \
                              / turn_slowdown)
 
