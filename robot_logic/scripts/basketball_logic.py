@@ -131,9 +131,9 @@ class BasketballLogic:
             return
 
         if self.turn_left:
-            self.send("movement:0:0:-150")
+            self.send("movement:0:0:-100")
         else:
-            self.send("movement:0:0:150")
+            self.send("movement:0:0:100")
 
     def react_moving_and_turning(self, position, baskets):
         log("In state moving and turning")
@@ -190,7 +190,7 @@ class BasketballLogic:
         else:
             (basket, distance) = basket_msg
             (bx, by, bw, bh) = basket
-            basket_adjustment = -0.03
+            basket_adjustment = -0.025
             horizontal_basket_position = bx + (bw / 2.0) - 0.5 + basket_adjustment
             log("Basket position is {}".format(horizontal_basket_position))
 
@@ -338,9 +338,9 @@ class BasketballLogic:
                   (2.012, 198),
                   (2.098, 199),
                   (2.263, 202),
-                  (2.33, 206),
+                  (2.33, 208),
                   (2.43, 211),
-                  (2.62, 241),
+                  (2.62, 230),
                   (2.71, 243),
                   (3.33, 260),
                   (3.6, 270)]

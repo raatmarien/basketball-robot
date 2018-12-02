@@ -31,7 +31,7 @@ WIDTH = 1280
 HEIGHT = 720
 FRAME_RATE = 30
 
-MIN_BALL_CONTOUR_AREA = 30
+MIN_BALL_CONTOUR_AREA = 10
 MIN_BASKET_CONTOUR_AREA = 100
 MAX_BALL_CONTOUR_AREA = 2000
 DEBUG = False
@@ -240,7 +240,7 @@ class ImageProcessor():
                     max_ball = (x, y, width, height)
                     max_ball_distance = distance
             (x, y, width, height) = max_ball
-            ball_adjustment = -0.025
+            ball_adjustment = -0.015
             ball_pos = str(((x + (width / 2)) / float(WIDTH)) - 0.5 + ball_adjustment)
             debug_log("Ball at " + ball_pos)
             return ball_pos + ":" + str(max_ball_distance)

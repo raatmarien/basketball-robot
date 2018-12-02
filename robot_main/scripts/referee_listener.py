@@ -25,8 +25,8 @@ from std_msgs.msg import String
 movement_pub = rospy.Publisher("movement", String, queue_size=10)
 referee_pub = rospy.Publisher("robot_main/referee", String, queue_size=10)
 
-robotID = "A"
-fieldID = "NO"
+robotID = "B"
+fieldID = "A"
 
 def mainboard_callback(message):
     if len(message.data.split(":")) == 1:

@@ -23,11 +23,11 @@ import rospy
 from std_msgs.msg import String
 
 def new_object_callback(message):
-    pass
-    # try:
-    #     rospy.loginfo("distance: "+message.data.split("\n")[1].split(":")[1].split(",")[4])
-    # except:
-    #     rospy.loginfo("distance: None found")
+    # pass
+    try:
+        rospy.loginfo("distance: "+message.data.split("\n")[1].split(":")[0].split(",")[4])
+    except:
+        rospy.loginfo("distance: None found")
 
 
 def movement_controller():
