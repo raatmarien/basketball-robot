@@ -35,6 +35,7 @@ def mainboard_callback(message):
     if len(without_ref) > 1:
         command = without_ref[:-1]
         if command == "a" + fieldID + "XSTART----" or command == "a" + fieldID + robotID + "START----":
+            rospy.loginfo("Sending start command")
             referee_pub.publish("start")
         elif command == "a" + fieldID + "XSTOP-----" or command == "a" + fieldID + robotID + "STOP-----":
             referee_pub.publish("stop")

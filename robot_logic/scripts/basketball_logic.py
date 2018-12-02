@@ -42,7 +42,7 @@ CAMERA_FOV = 29.0 # Trial and error (mostly error though)
 
 # Variable
 DEBUG = False
-SCORE_IN_BLUE = False
+SCORE_IN_BLUE = True
 
  # Change to False if we need to score in the
                      # magenta basket
@@ -339,9 +339,9 @@ class BasketballLogic:
                   (2.263, 202),
                   (2.43, 204),
                   (2.62, 241),
-                  (2.71, 243)]
+                  (2.71, 243),
+                  (3.29, 270)]
 
-        
         # return 
 
         # for i in range(len(speeds)):
@@ -362,7 +362,7 @@ class BasketballLogic:
            speed_per_dist = (sec_speed - min_speed) / (sec_dist - min_dist)
            return min_speed - ((min_dist - distance) * speed_per_dist)-movement_constant
         elif distance >= max_dist:
-            return 230
+            return 270
            # speed_per_dist = (max_speed - sm_speed) / (max_dist - sm_dist)
            # return max_speed + ((distance - max_dist) * speed_per_dist)-movement_constant
         else:
@@ -382,6 +382,7 @@ def new_object_callback(message):
 
 
 def new_referee_command_callback(message):
+    rospy.loginfo("Received referee command: {}".format(message))
     if message.data == "start" and logic.state == State.STOPPED:
         logic.move_to_state(State.FORWARD)
     elif message.data == "stop":

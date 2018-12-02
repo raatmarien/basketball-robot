@@ -45,6 +45,9 @@ class Driver:
         self.wheel_two_speed = 0
         self.wheel_three_speed = 0
         self.throw_speed = 100
+
+        self.throw_changed = True
+        self.wheels_changed = True
 	rospy.Timer(rospy.Duration(0.1), self.main_board_read)
 
     def main_board_read(self,args):
@@ -85,7 +88,7 @@ class Driver:
             self.wheel_two_speed = w2
             self.wheel_three_speed = w3
 
-            self.main_board.set_wheels(self.wheel_one_speed, self.wheel_two_speed, self.wheel_three_speed)
+            self.wheels_changed = True
 
 
     def movement_callback(self, command):
@@ -112,8 +115,8 @@ class Driver:
             try:
                 splitted = command.split(":")
                 if int(splitted[1]) != int(self.throw_speed):
+                    self.throw_changed = True
                     self.throw_speed = splitted[1]
-                    self.main_board.set_throw(self.throw_speed)
             except:
                 rospy.loginfo("Incorrect throw command received and ignored")
         elif command.split(":")[0] == "movement":
@@ -141,13 +144,27 @@ class Driver:
     def movement_listener(self):
         rospy.Subscriber("movement", String, self.movement_callback)
         self.mainboard_out = rospy.Publisher("mainboard", String, queue_size=10)
-        rate = rospy.Rate(10)
+        rate = rospy.Rate(40)
 
+        counter = 0
         while not rospy.is_shutdown():
-            self.main_board.set_throw(self.throw_speed)
-            self.main_board.set_wheels(self.wheel_one_speed, self.wheel_two_speed, self.wheel_three_speed)
-	    
+            if counter % 5 == 0:
+                self.main_board.set_throw(self.throw_speed)
+            elif counter % 10 == 0:
+                self.main_board.set_wheels(self.wheel_one_speed, self.wheel_two_speed, self.wheel_three_speed)
+                counter = 0
+            else:
+                if self.wheels_changed:
+                    self.main_board.set_wheels(self.wheel_one_speed, self.wheel_two_speed, self.wheel_three_speed)
+                    self.wheels_changed = False
+                    rate.sleep()
+
+                if self.throw_changed:
+                    self.main_board.set_throw(self.throw_speed)
+                    self.throw_changed = False
+
  	    #self.main_board_read()
+            counter = counter + 1
 	    rate.sleep()
 
 
