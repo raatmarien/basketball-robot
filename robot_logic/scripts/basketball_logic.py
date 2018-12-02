@@ -170,7 +170,7 @@ class BasketballLogic:
         pos = float(position.split(":")[0])
         ball_distance = float(position.split(":")[1])
 
-        if ball_distance > DISTANCE_TO_CENTER_BALL:
+        if ball_distance > DISTANCE_TO_CENTER_BALL + 0.1:
             self.move_to_state(State.MOVING_AND_TURNING)
             self.react(position, baskets)
             return
@@ -190,7 +190,7 @@ class BasketballLogic:
         else:
             (basket, distance) = basket_msg
             (bx, by, bw, bh) = basket
-            basket_adjustment = -0.08
+            basket_adjustment = -0.04
             horizontal_basket_position = bx + (bw / 2.0) - 0.5 + basket_adjustment
             log("Basket position is {}".format(horizontal_basket_position))
 
