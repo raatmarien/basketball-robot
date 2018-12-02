@@ -34,8 +34,8 @@ CENTER_BASKET_REGION = 0.01
 CENTER_BALL_REGION = 0.01
 
 
-TIME_MOVING_FORWARD = 8
 TIME_THROWING = 2
+TIME_BACKING_UP = 0.3
 DISTANCE_TO_CENTER_BALL = 0.5
 CAMERA_FOV = 29.0 # Trial and error (mostly error though)
 
@@ -50,7 +50,7 @@ SCORE_IN_BLUE = True
 
 class State:
     STOPPED, FORWARD, TURNING, MOVING_AND_TURNING, \
-        CENTERING, THROWING = range(6)
+        CENTERING, THROWING, BACKING_UP = range(7)
 
 
 def log(text):
@@ -65,6 +65,7 @@ class BasketballLogic:
         self.move_to_state(State.STOPPED)
         self.basket_distances = [0]
         self.basket_last_seen_left = True
+        self.time_moving_forward = 2
 
     def send(self, command):
         log("Sending {}".format(command))
@@ -87,6 +88,8 @@ class BasketballLogic:
             self.react_centering(position, baskets)
         elif self.state == State.THROWING:
             self.react_throwing(position, baskets)
+        elif self.state == State.BACKING_UP:
+            self.react_backing_up(position, baskets)
 
     def update_basket_info(self, baskets):
         if SCORE_IN_BLUE:
@@ -111,15 +114,16 @@ class BasketballLogic:
 
     def react_forward(self, position, baskets):
         log("In state forward")
-        if (time.time() - self.forward_start_time) > TIME_MOVING_FORWARD:
+        if (time.time() - self.forward_start_time) > self.time_moving_forward:
+            self.time_moving_forward = 0
             self.move_to_state(State.TURNING)
             self.react(position, baskets)
             return
 
-        if position != "None":
-            self.move_to_state(State.MOVING_AND_TURNING)
-            self.react(position, baskets)
-            return
+        # if position != "None":
+        #     self.move_to_state(State.MOVING_AND_TURNING)
+        #     self.react(position, baskets)
+        #     return
 
         self.send("movement:75:0:0")
 
@@ -163,7 +167,7 @@ class BasketballLogic:
     def react_centering(self, position, baskets):
         log("In state centering")
         if position == "None":
-            self.move_to_state(State.TURNING)
+            self.move_to_state(State.BACKING_UP)
             self.react(position, baskets)
             return
 
@@ -244,12 +248,28 @@ class BasketballLogic:
         self.send("forward")
         self.throw(distance)
 
+    def react_backing_up(self, position, baskets):
+        log("In state backing up")
+        if (time.time() - self.backing_up_start_time) > TIME_BACKING_UP:
+            self.move_to_state(State.TURNING)
+            self.react(position, baskets)
+            return
+
+        if position != "None":
+            self.move_to_state(State.MOVING_AND_TURNING)
+            self.react(position, baskets)
+            return
+
+        self.send("backward")
+
     def move_to_state(self, state):
         log("Moving to state {}".format(state))
         if state == State.FORWARD:
             self.forward_start_time = time.time()
         elif state == State.THROWING:
             self.throwing_start_time = time.time()
+        elif state == State.BACKING_UP:
+            self.backing_up_start_time = time.time()
         self.state = state
         rate = rospy.Rate(50)
         rate.sleep()
@@ -269,7 +289,7 @@ class BasketballLogic:
 
     def get_throw_speed(self, distance):
 	movement_constant = 0
-	dist_const = -0.15
+	dist_const = -0.19
 
         distance += dist_const
 
